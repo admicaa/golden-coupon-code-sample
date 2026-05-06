@@ -15,6 +15,11 @@ class ArticlesPolicy
         return $user->can('view-articles');
     }
 
+    public function view(Admin $user, Article $article)
+    {
+        return $this->viewAny($user);
+    }
+
     public function create(Admin $user)
     {
         return $user->can('create-articles');

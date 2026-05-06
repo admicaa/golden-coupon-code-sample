@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\ArticleCreateRequest;
 use App\Http\Requests\Backend\ArticleImageRequest;
 use App\Http\Requests\Backend\ArticlePageUpdateRequest;
+use App\Http\Requests\Backend\ArticleUpdateRequest;
 use App\Http\Requests\Backend\MetaTagsRequest;
 use App\Models\Article;
 use App\Models\ArticlePages;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ArticlesController extends Controller
 {
@@ -36,11 +38,19 @@ class ArticlesController extends Controller
             ->paginate($perPage);
     }
 
+    public function show(Article $article)
+    {
+        $this->authorize('view', $article);
+
+        return $article->adminFormula()->find($article->id);
+    }
+
     public function store(ArticleCreateRequest $request)
     {
         $data = $request->validated();
+        $pageData = $this->pageData($data);
 
-        $article = DB::transaction(function () use ($data) {
+        $article = DB::transaction(function () use ($pageData) {
             $article = Article::create();
             $tags = config('seo.default_meta_tags', []);
 
@@ -48,11 +58,11 @@ class ArticlesController extends Controller
                 $payload = [
                     'language' => $language->shortcut,
                     'slug' => $language->shortcut === 'GB'
-                        ? $data['pages']['GB']['slug']
-                        : $data['pages']['GB']['slug'] . '-' . $language->shortcut,
-                    'name' => $data['pages']['GB']['name'],
-                    'title' => $data['pages']['GB']['title'],
-                    'description' => $data['pages']['GB']['description'] ?? null,
+                        ? $pageData['slug']
+                        : $pageData['slug'] . '-' . $language->shortcut,
+                    'name' => $pageData['name'],
+                    'title' => $pageData['title'],
+                    'description' => $pageData['description'],
                 ];
                 $page = $article->pages()->create($payload);
 
@@ -63,6 +73,17 @@ class ArticlesController extends Controller
 
             return $article;
         });
+
+        return $article->adminFormula()->find($article->id);
+    }
+
+    public function update(ArticleUpdateRequest $request, Article $article)
+    {
+        $page = $article->pages()->where('language', language())->first()
+            ?: $article->pages()->where('language', 'GB')->firstOrFail();
+        $pageData = $this->pageData($request->validated(), $page);
+
+        $page->update($pageData);
 
         return $article->adminFormula()->find($article->id);
     }
@@ -184,5 +205,28 @@ class ArticlesController extends Controller
         $article->delete();
 
         return $article->id;
+    }
+
+    protected function pageData(array $data, ?ArticlePages $page = null)
+    {
+        if (isset($data['pages']['GB'])) {
+            return [
+                'name' => $data['pages']['GB']['name'],
+                'title' => $data['pages']['GB']['title'],
+                'slug' => $data['pages']['GB']['slug'],
+                'description' => $data['pages']['GB']['description'] ?? null,
+            ];
+        }
+
+        $name = $data['name'];
+
+        return [
+            'name' => $name,
+            'title' => $data['title'] ?? ($page ? ($page->title === $page->name ? $name : $page->title) : $name),
+            'slug' => $data['slug'] ?? ($page ? $page->slug : Str::slug($name)),
+            'description' => array_key_exists('description', $data)
+                ? $data['description']
+                : (array_key_exists('body', $data) ? $data['body'] : ($page ? $page->description : null)),
+        ];
     }
 }

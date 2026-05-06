@@ -90,7 +90,7 @@ Route::middleware(['multiauth:admin'])->group(function () {
         Route::delete('/tags/{tag}', [CouponController::class, 'destroyMetaTag']);
     });
 
-    Route::apiResource('articles', ArticlesController::class)->except(['show']);
+    Route::apiResource('articles', ArticlesController::class);
     Route::prefix('articles')->group(function () {
         Route::prefix('images')->group(function () {
             Route::post('{article}', [ArticlesController::class, 'changeImage']);
