@@ -2,8 +2,7 @@
 
 use App\Models\StoreImages;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/storage/{filename}', function ($filename) {
     $relative = ltrim($filename, '/');
@@ -23,7 +22,7 @@ Route::get('/storage/{filename}', function ($filename) {
         abort(404);
     }
 
-    return Response::make(File::get($absolute), 200, [
+    return response()->file($absolute, [
         'Content-Type' => File::mimeType($absolute),
     ]);
 })->where('filename', '[A-Za-z0-9_\-./]+');
