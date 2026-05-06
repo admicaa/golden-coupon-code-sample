@@ -1,10 +1,12 @@
 {
-    "name": "laravel/laravel",
+    "name": "ahmedali/coupons-stores-admin",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "Backend API for the Coupons & Stores admin platform.",
     "keywords": [
-        "framework",
-        "laravel"
+        "laravel",
+        "api",
+        "coupons",
+        "code-sample"
     ],
     "license": "MIT",
     "require": {
