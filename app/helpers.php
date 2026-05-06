@@ -1,21 +1,138 @@
 <?php
 
 use App\Models\Languages;
+use Illuminate\Support\Facades\Cache;
+
+if (!function_exists('default_language')) {
+    function default_language()
+    {
+        return (string) config('app.locale', 'GB');
+    }
+}
+
+if (!function_exists('language_shortcuts')) {
+    function language_shortcuts()
+    {
+        $configured = array_values(array_unique((array) config('app.supported_languages', [default_language(), 'AR'])));
+        $stored = languages()->pluck('shortcut')->all();
+
+        return !empty($stored) ? array_values(array_unique($stored)) : $configured;
+    }
+}
 
 if (!function_exists('language')) {
     function language()
     {
-        $allowed = config('app.supported_languages', ['GB', 'AR']);
-        $header = request()->header('Content-Language');
+        $allowed = language_shortcuts();
+        $default = in_array(default_language(), $allowed, true) ? default_language() : ($allowed[0] ?? 'GB');
+        $request = request();
 
-        return in_array($header, $allowed, true) ? $header : 'GB';
+        foreach (language_header_candidates($request->header('Content-Language')) as $candidate) {
+            $resolved = resolve_language_candidate($candidate, $allowed);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        foreach (explode(',', (string) $request->header('Accept-Language')) as $segment) {
+            $parts = explode(';', $segment);
+            foreach (language_header_candidates($parts[0] ?? null) as $candidate) {
+                $resolved = resolve_language_candidate($candidate, $allowed);
+                if ($resolved !== null) {
+                    return $resolved;
+                }
+            }
+        }
+
+        return $default;
     }
 }
 
 if (!function_exists('languages')) {
     function languages()
     {
-        return Languages::all();
+        if (app()->runningUnitTests()) {
+            return Languages::query()->orderBy('id')->get();
+        }
+
+        static $loaded;
+
+        if ($loaded !== null) {
+            return $loaded;
+        }
+
+        $loaded = Cache::rememberForever('languages.all', function () {
+            return Languages::query()->orderBy('id')->get();
+        });
+
+        return $loaded;
+    }
+}
+
+if (!function_exists('language_header_candidates')) {
+    function language_header_candidates($value)
+    {
+        $value = strtoupper(trim((string) $value));
+
+        if ($value === '') {
+            return [];
+        }
+
+        $tokens = preg_split('/[-_]/', $value) ?: [];
+        $primary = strtoupper($tokens[0] ?? '');
+        $region = strtoupper($tokens[1] ?? '');
+
+        $candidates = array_filter([
+            $value,
+            $primary,
+            $region,
+            map_primary_language_to_legacy_shortcut($primary),
+        ]);
+
+        return array_values(array_unique($candidates));
+    }
+}
+
+if (!function_exists('map_primary_language_to_legacy_shortcut')) {
+    function map_primary_language_to_legacy_shortcut($primary)
+    {
+        $map = [
+            'EN' => 'GB',
+            'AR' => 'AR',
+        ];
+
+        return $map[$primary] ?? null;
+    }
+}
+
+if (!function_exists('resolve_language_candidate')) {
+    function resolve_language_candidate($candidate, array $allowed)
+    {
+        return in_array($candidate, $allowed, true) ? $candidate : null;
+    }
+}
+
+if (!function_exists('language_fallbacks')) {
+    function language_fallbacks($language = null)
+    {
+        return array_values(array_unique([
+            $language ?: language(),
+            default_language(),
+        ]));
+    }
+}
+
+if (!function_exists('should_include_page_body')) {
+    function should_include_page_body()
+    {
+        return request()->boolean('body');
+    }
+}
+
+if (!function_exists('should_hide_tour_page_description')) {
+    function should_hide_tour_page_description()
+    {
+        return request()->boolean('hide_tour_page_description');
     }
 }
 

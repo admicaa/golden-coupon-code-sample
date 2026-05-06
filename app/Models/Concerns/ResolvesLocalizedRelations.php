@@ -11,20 +11,31 @@ trait ResolvesLocalizedRelations
     protected function localizedRelation(string $relation, ?string $language = null)
     {
         $language = $language ?: language();
-        $cacheKey = $relation . ':' . $language;
 
-        if (array_key_exists($cacheKey, $this->localizedRelationCache)) {
-            return $this->localizedRelationCache[$cacheKey];
-        }
+        foreach (language_fallbacks($language) as $candidate) {
+            $cacheKey = $relation . ':' . $candidate;
 
-        if ($this->relationLoaded($relation)) {
-            $localized = $this->loadedLocalizedRelation($relation, $language);
+            if (array_key_exists($cacheKey, $this->localizedRelationCache)) {
+                return $this->localizedRelationCache[$cacheKey];
+            }
+
+            if ($this->relationLoaded($relation)) {
+                $localized = $this->loadedLocalizedRelation($relation, $candidate);
+                if ($localized) {
+                    return $this->localizedRelationCache[$cacheKey] = $localized;
+                }
+            }
+
+            $localized = $this->{$relation}()
+                ->where('language', $candidate)
+                ->first();
+
             if ($localized) {
                 return $this->localizedRelationCache[$cacheKey] = $localized;
             }
         }
 
-        return $this->localizedRelationCache[$cacheKey] = $this->{$relation}()
+        return $this->{$relation}()
             ->where('language', $language)
             ->firstOrFail();
     }
