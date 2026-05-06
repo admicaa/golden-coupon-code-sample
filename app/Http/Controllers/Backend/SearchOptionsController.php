@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\SearchOptionAssignRequest;
 use App\Http\Requests\Backend\SearchOptionRequest;
 use App\Models\Coupon;
+use App\Models\SearchOptions;
 use App\Models\Store;
 use App\Services\Catalog\SearchOptionService;
-use App\SearchOptions;
 
 class SearchOptionsController extends Controller
 {

@@ -4,13 +4,13 @@ namespace Tests\Unit;
 
 use App\Models\Country;
 use App\Models\CountryNames;
+use App\Models\SearchOptions;
+use App\Models\SearchOptionsPages;
 use App\Models\Section;
 use App\Models\SectionPages;
 use App\Models\Store;
 use App\Models\StorePage;
 use App\Models\StorePageMetaTag;
-use App\SearchOptions;
-use App\SearchOptionsPages;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Tests\TestCase;
 

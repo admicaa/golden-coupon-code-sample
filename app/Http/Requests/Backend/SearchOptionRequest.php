@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Backend;
 
 use App\Http\Requests\Concerns\ValidatesLocalizedPayload;
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchOptionRequest extends FormRequest

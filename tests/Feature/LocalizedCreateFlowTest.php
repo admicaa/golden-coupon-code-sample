@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Country;
 use App\Models\Languages;
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;

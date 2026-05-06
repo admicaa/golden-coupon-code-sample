@@ -3,7 +3,7 @@
 namespace App\Services\Search;
 
 use App\Models\Country;
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Support\Facades\DB;
 
 class SearchFacetService

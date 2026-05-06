@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\CountryNames;
+use App\Models\SearchOptionsPages;
 use App\Services\Search\SearchFacetService;
 use App\Services\Search\SearchQueryService;
-use App\SearchOptionsPages;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller

@@ -2,7 +2,7 @@
 
 namespace App\Services\Catalog;
 
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Support\Facades\DB;
 
 class SearchOptionService

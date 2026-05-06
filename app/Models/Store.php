@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Concerns\ResolvesLocalizedRelations;
-use App\SearchOptions;
 use App\Traits\Search;
 
 class Store extends Model

@@ -3,7 +3,7 @@
 namespace App\Policies\Backend;
 
 use App\Models\Admin;
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SearchOptionsPolicy

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Backend;
 
-use App\SearchOptions;
+use App\Models\SearchOptions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchOptionAssignRequest extends FormRequest
