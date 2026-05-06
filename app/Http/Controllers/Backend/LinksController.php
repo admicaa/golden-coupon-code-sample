@@ -11,11 +11,15 @@ class LinksController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Link::class);
+
         return Link::whereNull('link_id')->adminFormula()->get();
     }
 
     public function store(LinksSaveRequest $request)
     {
+        $this->authorize('create', Link::class);
+
         DB::transaction(function () use ($request) {
             foreach ($request->input('links') as $link) {
                 $this->saveLink($link, null);
@@ -27,6 +31,8 @@ class LinksController extends Controller
 
     public function destroy(Link $link)
     {
+        $this->authorize('delete', $link);
+
         $link->delete();
 
         return $link->id;

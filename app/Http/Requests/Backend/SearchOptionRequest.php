@@ -2,13 +2,24 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\SearchOptions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchOptionRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        if (!$this->user()) {
+            return false;
+        }
+
+        if ($this->isMethod('POST')) {
+            return $this->user()->can('create', SearchOptions::class);
+        }
+
+        $option = $this->route('option');
+
+        return $option && $this->user()->can('update', $option);
     }
 
     public function rules()

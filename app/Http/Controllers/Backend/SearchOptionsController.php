@@ -14,11 +14,15 @@ class SearchOptionsController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', SearchOptions::class);
+
         return SearchOptions::query()->adminFormula()->get();
     }
 
     public function store(SearchOptionRequest $request)
     {
+        $this->authorize('create', SearchOptions::class);
+
         $data = $request->validated();
 
         return DB::transaction(function () use ($data) {
@@ -37,6 +41,8 @@ class SearchOptionsController extends Controller
 
     public function update(SearchOptionRequest $request, SearchOptions $option)
     {
+        $this->authorize('update', $option);
+
         $data = $request->validated();
 
         DB::transaction(function () use ($data, $option) {
@@ -55,6 +61,8 @@ class SearchOptionsController extends Controller
 
     public function destroy(SearchOptions $option)
     {
+        $this->authorize('delete', $option);
+
         $option->delete();
 
         return $option->id;
@@ -62,9 +70,13 @@ class SearchOptionsController extends Controller
 
     public function assign(SearchOptionAssignRequest $request)
     {
+        $this->authorize('assign', SearchOptions::class);
+
         $element = $request->filled('coupon_id')
             ? Coupon::findOrFail($request->input('coupon_id'))
             : Store::findOrFail($request->input('store_id'));
+
+        $this->authorize('update', $element);
 
         $element->options()->sync($request->input('options', []));
 

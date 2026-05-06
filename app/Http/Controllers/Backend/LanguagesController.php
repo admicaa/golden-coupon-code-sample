@@ -10,6 +10,8 @@ class LanguagesController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Languages::class);
+
         $perPage = per_page($request->input('itemsPerPage'));
 
         return Languages::paginate($perPage);

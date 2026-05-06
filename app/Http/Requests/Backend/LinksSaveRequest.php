@@ -2,13 +2,15 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Models\Link;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LinksSaveRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        return $this->user()
+            && $this->user()->can('create', Link::class);
     }
 
     public function rules()

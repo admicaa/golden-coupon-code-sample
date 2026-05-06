@@ -2,13 +2,30 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Models\Section;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MainPageSaveRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        if (!$this->user()) {
+            return false;
+        }
+
+        if ($store = $this->route('store')) {
+            return $this->user()->can('update', $store);
+        }
+
+        if ($country = $this->route('country')) {
+            return $this->user()->can('update', $country);
+        }
+
+        if ($article = $this->route('article')) {
+            return $this->user()->can('update', $article);
+        }
+
+        return $this->user()->can('updateMainPage', Section::class);
     }
 
     public function rules()

@@ -2,13 +2,15 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\SearchOptions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchOptionAssignRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        return $this->user()
+            && $this->user()->can('assign', SearchOptions::class);
     }
 
     public function rules()

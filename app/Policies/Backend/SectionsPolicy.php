@@ -12,6 +12,16 @@ class SectionsPolicy
 {
     use HandlesAuthorization;
 
+    public function viewMainPage(Admin $user)
+    {
+        return $user->can('view-main-page');
+    }
+
+    public function updateMainPage(Admin $user)
+    {
+        return $user->can('edit-main-page');
+    }
+
     public function delete(Admin $user, Section $section)
     {
         if ($section->page_id) {
