@@ -8,6 +8,7 @@ use App\Models\CouponPages;
 use App\Models\Section;
 use App\Models\SectionContents;
 use Database\Seeders\CountrySeeder;
+use Database\Seeders\CountryPageSeeder;
 use Database\Seeders\CouponSeeder;
 use Database\Seeders\MainPageSeeder;
 use Database\Seeders\StorePageSeeder;
@@ -36,6 +37,7 @@ class PageSeedersTest extends TestCase
             StoreSeeder::class,
             CouponSeeder::class,
             StorePageSeeder::class,
+            CountryPageSeeder::class,
             MainPageSeeder::class,
         ]);
 
@@ -59,8 +61,12 @@ class PageSeedersTest extends TestCase
         $storeSectionCount = Section::query()
             ->whereNotNull('store_id')
             ->count();
+        $countrySectionCount = Section::query()
+            ->whereNotNull('country_id')
+            ->count();
 
         $this->assertSame(6, $storeSectionCount);
+        $this->assertSame(16, $countrySectionCount);
         $this->assertSame(0, Section::query()->whereNotNull('store_id')->whereNull('page_id')->whereHas('contents', function ($query) {
             $query->whereNull('coupon_id');
         })->count());
@@ -79,6 +85,7 @@ class PageSeedersTest extends TestCase
             StoreSeeder::class,
             CouponSeeder::class,
             StorePageSeeder::class,
+            CountryPageSeeder::class,
             MainPageSeeder::class,
         ]);
 
@@ -90,6 +97,7 @@ class PageSeedersTest extends TestCase
 
         $this->seed([
             StorePageSeeder::class,
+            CountryPageSeeder::class,
             MainPageSeeder::class,
         ]);
 
