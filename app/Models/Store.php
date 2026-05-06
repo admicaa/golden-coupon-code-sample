@@ -89,8 +89,6 @@ class Store extends Model
 
     public function getPageAttribute()
     {
-
-
         $onlyArray = ['title', 'name', 'slug'];
         if (request()->body) {
             $onlyArray = ['title', 'name', 'metatags', 'slug', 'body'];
