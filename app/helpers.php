@@ -10,7 +10,7 @@ if (!function_exists('front_storage')) {
      * Mirrors Storage::disk('front')->path($path) but returns a string even
      * when callers want to use it with the File facade or PHP filesystem
      * functions directly. Falls back to storage/app/front when
-     * FORNT_END_STORAGE_PATH is not set.
+     * FRONT_END_STORAGE_PATH is not set.
      */
     function front_storage($path = '')
     {

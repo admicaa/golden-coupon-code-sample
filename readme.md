@@ -40,10 +40,10 @@ DB_DATABASE=goldencoupon
 DB_USERNAME=root
 DB_PASSWORD=
 ALLOW_CORS=http://localhost:8080
-FORNT_END_STORAGE_PATH=/tmp/golden-front-storage
+FRONT_END_STORAGE_PATH=/tmp/golden-front-storage
 ```
 
-`FORNT_END_STORAGE_PATH` keeps the spelling from the original project so existing deploys do not break. Renaming it is a follow-up.
+`FRONT_END_STORAGE_PATH` is the local path used by the `front` filesystem disk to share media with the public-facing site. Optional; defaults to `storage/app/front`.
 
 Database and Passport:
 
