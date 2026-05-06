@@ -6,11 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateSearchOptionsCouponsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('search_options_coupons', function (Blueprint $table) {
@@ -25,16 +20,15 @@ class CreateSearchOptionsCouponsTable extends Migration
             $table->unsignedBigInteger('store_id')->nullable();
             $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
 
+            $table->index('search_option_id', 'search_options_coupons_option_idx');
             $table->index(['store_id',  'search_option_id'], 'search_options_coupons_store_option_idx');
             $table->index(['coupon_id', 'search_option_id'], 'search_options_coupons_coupon_option_idx');
+
+            $table->unique(['search_option_id', 'coupon_id'], 'search_options_coupons_option_coupon_unique');
+            $table->unique(['search_option_id', 'store_id'], 'search_options_coupons_option_store_unique');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('search_options_coupons');
