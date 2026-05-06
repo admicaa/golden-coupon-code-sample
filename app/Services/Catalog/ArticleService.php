@@ -41,6 +41,8 @@ class ArticleService
             return $article;
         });
 
+        $this->includeBodyOnResponse();
+
         return $article->adminFormula()->find($article->id);
     }
 
@@ -50,6 +52,8 @@ class ArticleService
             ?: $article->pages()->where('language', 'GB')->firstOrFail();
 
         $page->update($this->pageData($data, $page));
+
+        $this->includeBodyOnResponse();
 
         return $article->adminFormula()->find($article->id);
     }
@@ -62,6 +66,8 @@ class ArticleService
             'description' => $data['description'] ?? null,
             'name' => $data['name'],
         ]);
+
+        $this->includeBodyOnResponse();
 
         return $page->article->adminFormula()->find($page->article_id);
     }
@@ -143,5 +149,10 @@ class ArticleService
         foreach (config('seo.default_meta_tags', []) as $tag) {
             $page->metatags()->create($tag);
         }
+    }
+
+    protected function includeBodyOnResponse(): void
+    {
+        request()->merge(['body' => true]);
     }
 }
