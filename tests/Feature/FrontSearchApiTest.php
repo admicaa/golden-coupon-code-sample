@@ -196,12 +196,13 @@ class FrontSearchApiTest extends TestCase
         $weekend = SearchOptions::create();
         $weekend->pages()->create(['language' => 'GB', 'name' => 'Weekend']);
 
-        DB::table('search_options_coupons')->insert([
-            ['search_option_id' => $featured->id, 'store_id' => $egyptStore->id],
-            ['search_option_id' => $featured->id, 'coupon_id' => $egyptCoupon->id],
-            ['search_option_id' => $online->id, 'store_id' => $uaeStore->id],
-            ['search_option_id' => $online->id, 'coupon_id' => $uaeCoupon->id],
-        ]);
+        // Insert one row at a time. The Laravel query builder normalises a
+        // multi-row insert against the first row's column list, which silently
+        // drops `coupon_id` entries when the first row carries a `store_id`.
+        $this->attachOption($featured->id, store: $egyptStore->id);
+        $this->attachOption($featured->id, coupon: $egyptCoupon->id);
+        $this->attachOption($online->id, store: $uaeStore->id);
+        $this->attachOption($online->id, coupon: $uaeCoupon->id);
 
         return [
             'countries' => [
@@ -229,5 +230,14 @@ class FrontSearchApiTest extends TestCase
         $facet = collect($response->json('facets'))->firstWhere('name', $facetName);
 
         return collect($facet['values'])->keyBy($key)->all();
+    }
+
+    protected function attachOption(int $optionId, ?int $store = null, ?int $coupon = null): void
+    {
+        DB::table('search_options_coupons')->insert([
+            'search_option_id' => $optionId,
+            'store_id' => $store,
+            'coupon_id' => $coupon,
+        ]);
     }
 }
