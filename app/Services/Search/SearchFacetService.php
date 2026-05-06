@@ -79,17 +79,6 @@ class SearchFacetService
             ->all();
     }
 
-    /**
-     * Filter facet counts.
-     *
-     * The previous implementation used `JOIN ... ON coupon_id = ... orOn store_id = ...`,
-     * which made it hard to reason about NULL handling and blurred the two
-     * logical pivots that share `search_options_coupons` (one keyed by
-     * coupon_id, one keyed by store_id). We now express each path as its own
-     * subquery and `UNION ALL` them; the outer `COUNT(DISTINCT pair)` keeps
-     * a coupon/store from being double-counted when both its store and the
-     * coupon itself carry the same filter option.
-     */
     public function buildFiltersFacet($term, array $countries, $storeOnly, $couponOnly)
     {
         $matchedPairs = $this->searchQueryService
