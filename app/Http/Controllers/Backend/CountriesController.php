@@ -12,26 +12,22 @@ use App\Models\CountryNames;
 use App\Models\StorePageMetaTag;
 use App\Services\Catalog\CountryService;
 use App\Services\Content\MetaTagService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class CountriesController extends Controller
 {
-    protected $countries;
-    protected $metaTags;
-
-    public function __construct(CountryService $countries, MetaTagService $metaTags)
-    {
-        $this->countries = $countries;
-        $this->metaTags = $metaTags;
+    public function __construct(
+        protected CountryService $countries,
+        protected MetaTagService $metaTags,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request): LengthAwarePaginator
     {
         $this->authorize('viewAny', Country::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Country::with('names')->paginate($perPage);
+        return Country::with('names')->paginate(per_page($request->input('itemsPerPage')));
     }
 
     public function store(CountryCreateRequest $request)
@@ -58,10 +54,7 @@ class CountriesController extends Controller
 
     public function destroyMetaTag(StorePageMetaTag $tag)
     {
-        $name = $tag->countryName;
-        if (!$name) {
-            abort(404);
-        }
+        $name = $tag->countryName ?? abort(404);
         $this->authorize('update', $name->country);
 
         $tag->delete();

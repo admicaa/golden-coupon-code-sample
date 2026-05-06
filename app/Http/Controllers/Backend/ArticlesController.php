@@ -12,37 +12,25 @@ use App\Models\Article;
 use App\Models\ArticlePages;
 use App\Models\StoreImages;
 use App\Models\StorePageMetaTag;
+use App\Queries\ArticleIndexQuery;
 use App\Services\Catalog\ArticleService;
 use App\Services\Content\MetaTagService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class ArticlesController extends Controller
 {
-    protected $articles;
-    protected $metaTags;
-
-    public function __construct(ArticleService $articles, MetaTagService $metaTags)
-    {
-        $this->articles = $articles;
-        $this->metaTags = $metaTags;
+    public function __construct(
+        protected ArticleService $articles,
+        protected MetaTagService $metaTags,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request, ArticleIndexQuery $query): LengthAwarePaginator
     {
         $this->authorize('viewAny', Article::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Article::query()
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $term = $request->input('search');
-                $query->whereHas('pages', function ($pages) use ($term) {
-                    $pages->where('name', 'like', '%' . $term . '%')
-                        ->orWhere('title', 'like', '%' . $term . '%');
-                });
-            })
-            ->adminFormula()
-            ->paginate($perPage);
+        return $query->paginate($request);
     }
 
     public function show(Article $article)
@@ -76,10 +64,7 @@ class ArticlesController extends Controller
 
     public function destroyMetaTag(StorePageMetaTag $tag)
     {
-        $page = $tag->articlePage;
-        if (!$page) {
-            abort(404);
-        }
+        $page = $tag->articlePage ?? abort(404);
         $this->authorize('update', $page->article);
 
         $tag->delete();
@@ -94,10 +79,7 @@ class ArticlesController extends Controller
 
     public function updateImage(Request $request, StoreImages $image)
     {
-        $article = $image->article;
-        if (!$article) {
-            abort(404);
-        }
+        $article = $image->article ?? abort(404);
         $this->authorize('update', $article);
 
         $data = $this->validate($request, [
@@ -116,5 +98,4 @@ class ArticlesController extends Controller
 
         return $article->id;
     }
-
 }

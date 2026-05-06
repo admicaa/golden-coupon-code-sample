@@ -1,31 +1,55 @@
-# Coupons & Stores Admin (API)
+# Coupons & Stores Admin API
 
-A Laravel code sample from a real coupons and stores platform. This repo is the backend API only. The Vue 2 admin panel and the public-facing site live in separate repos and consume these JSON endpoints.
+A Laravel 12 / PHP 8.2 backend for a coupons-and-stores platform. It powers a Vue 2 admin panel and a public-facing site that consume its JSON endpoints.
 
-The API manages stores, coupons, articles, countries, search filters, localized content, roles, and permissions.
+The API manages stores, coupons, articles, countries, search filters, localized content, roles, and permissions. It ships with Passport auth, Spatie Permission, full-text search with faceted filtering, and a comprehensive feature/unit test suite.
 
-Originally built on Laravel 6 and PHP 7.2. The backend was upgraded to Laravel 12 and PHP 8.2. The legacy Laravel app structure was kept on purpose.
+## Highlights
 
-## What it includes
-
-- Admin authentication with Passport personal access tokens
-- Role and permission management with Spatie Permission
-- Store, coupon, article, country, and filter management
-- Localized content pages (default locales `GB` and `AR`)
-- Search and facet filtering with a denormalized index table
-- Image upload to a local disk plus a configurable shared "front" disk
-- Translation files editor for the admin SPA, plus a public language-tree endpoint at `/api/js/lang/{lang}.js` for the public front site
-- Feature and unit tests covering auth, role updates, content flows, search, and translations
+- **Auth** — Passport personal access tokens against a dedicated `admins` guard
+- **Authorization** — policies + form-request `authorize()` checks for every admin action
+- **Roles & permissions** — Spatie Permission, with safe escalation guards
+- **Localized content** — first-class GB/AR pages on stores, coupons, articles, and countries
+- **Search & facets** — MySQL full-text index with country, type, and filter facets
+- **Media** — local disk + a configurable shared `front` disk for the public site
+- **Translation editor** — admins can edit language files through the API; public consumers read `/api/js/lang/{lang}.js`
+- **Tests** — Feature and unit tests covering auth, roles, content flows, image actions, search results and facets
 
 ## Tech stack
 
-- PHP 8.2
-- Laravel 12
-- Laravel Passport 12
-- Spatie Permission 6
-- MySQL 5.7+ or MariaDB 10.4+
+|          |                            |
+| -------- | -------------------------- |
+| PHP      | 8.2                        |
+| Laravel  | 12                         |
+| Auth     | Laravel Passport 12        |
+| RBAC     | Spatie Permission 6        |
+| Database | MySQL 5.7+ / MariaDB 10.4+ |
 
-## Local setup
+## Project layout
+
+```
+app/
+├── Http/Controllers/       # Backend (admin) and Front controllers
+├── Http/Requests/          # FormRequests with rules + authorize()
+├── Models/                 # Eloquent models (incl. localized accessors)
+├── Policies/Backend/       # One policy per admin resource
+├── Queries/                # Index/list query objects (filter + paginate)
+├── Services/
+│   ├── Admin/              # Admin/role/permission orchestration
+│   ├── Catalog/            # Store/coupon/article/country/search-option services
+│   ├── Content/            # Meta-tag service
+│   ├── Media/              # Image storage
+│   ├── Navigation/         # Header/link tree
+│   ├── Search/             # Search query + facet services
+│   └── Translations/       # Translation file editor
+└── Traits/                 # Cross-cutting helpers
+routes/
+├── api.php                 # Public auth + composition entry point
+├── api_admin.php           # Authenticated admin API
+└── api_front.php           # Public front API
+```
+
+## Getting started
 
 ```bash
 composer install
@@ -43,7 +67,7 @@ ALLOW_CORS=http://localhost:8080
 FRONT_END_STORAGE_PATH=/tmp/golden-front-storage
 ```
 
-`FRONT_END_STORAGE_PATH` is the local path used by the `front` filesystem disk to share media with the public-facing site. Optional; defaults to `storage/app/front`.
+`FRONT_END_STORAGE_PATH` is the local path used by the `front` filesystem disk to share media with the public-facing site. It is optional; it defaults to `storage/app/front`.
 
 Database and Passport:
 
@@ -80,20 +104,14 @@ php artisan route:clear
 php artisan cache:clear
 ```
 
-## Reviewer notes
+## Recommended reading order
 
-Good files to start with:
+If you want to skim the most representative files first:
 
-- `app/Http/Controllers/Backend/AuthController.php`
-- `app/Http/Requests/Backend/AdminUpdateRequest.php`
-- `app/Services/Search/SearchFacetService.php`
-- `app/Services/Search/SearchQueryService.php`
-- `app/Models/Concerns/ResolvesLocalizedRelations.php`
-- `tests/Feature`
-- `tests/Unit`
-
-## Legacy notes
-
-- The project started as Laravel 6 and was upgraded to Laravel 12.
-- The legacy Laravel app structure (`Kernel.php`, `Handler.php`, `RouteServiceProvider.php`) was kept on purpose.
-- Some naming and schema choices still reflect the original codebase.
+- [routes/api.php](routes/api.php), [routes/api_admin.php](routes/api_admin.php), [routes/api_front.php](routes/api_front.php) — composition + admin/front split
+- [app/Http/Controllers/Backend/AuthController.php](app/Http/Controllers/Backend/AuthController.php) — token issuance
+- [app/Http/Requests/Backend/AdminUpdateRequest.php](app/Http/Requests/Backend/AdminUpdateRequest.php) — privilege-aware role assignment
+- [app/Queries/StoreIndexQuery.php](app/Queries/StoreIndexQuery.php), [app/Queries/CouponIndexQuery.php](app/Queries/CouponIndexQuery.php) — admin list filters
+- [app/Services/Search/SearchQueryService.php](app/Services/Search/SearchQueryService.php), [app/Services/Search/SearchFacetService.php](app/Services/Search/SearchFacetService.php)
+- [app/Models/Concerns/ResolvesLocalizedRelations.php](app/Models/Concerns/ResolvesLocalizedRelations.php) — localized page accessors
+- [tests/Feature](tests/Feature), [tests/Unit](tests/Unit)

@@ -4,16 +4,15 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Languages;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class LanguagesController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): LengthAwarePaginator
     {
         $this->authorize('viewAny', Languages::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Languages::paginate($perPage);
+        return Languages::paginate(per_page($request->input('itemsPerPage')));
     }
 }

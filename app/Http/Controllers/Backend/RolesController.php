@@ -6,29 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\RoleRequest;
 use App\Models\Permission;
 use App\Services\Admin\RolePermissionService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
-    protected $roles;
-
-    public function __construct(RolePermissionService $roles)
-    {
-        $this->roles = $roles;
+    public function __construct(
+        protected RolePermissionService $roles,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request): LengthAwarePaginator
     {
         $this->authorize('viewAny', Role::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
         $with = $request->boolean('onlyRoles') ? [] : ['permissions'];
 
-        return Role::with($with)->paginate($perPage);
+        return Role::with($with)->paginate(per_page($request->input('itemsPerPage')));
     }
 
-    public function permissions()
+    public function permissions(): Collection
     {
         $this->authorize('viewAny', Role::class);
 

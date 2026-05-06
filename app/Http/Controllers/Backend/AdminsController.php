@@ -7,24 +7,21 @@ use App\Http\Requests\Backend\AdminCreateRequest;
 use App\Http\Requests\Backend\AdminUpdateRequest;
 use App\Models\Admin;
 use App\Services\Admin\AdminRoleService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class AdminsController extends Controller
 {
-    protected $adminRoles;
-
-    public function __construct(AdminRoleService $adminRoles)
-    {
-        $this->adminRoles = $adminRoles;
+    public function __construct(
+        protected AdminRoleService $adminRoles,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request): LengthAwarePaginator
     {
         $this->authorize('viewAny', Admin::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Admin::paginate($perPage);
+        return Admin::paginate(per_page($request->input('itemsPerPage')));
     }
 
     public function store(AdminCreateRequest $request)
@@ -34,8 +31,7 @@ class AdminsController extends Controller
 
     public function update(AdminUpdateRequest $request, Admin $admin)
     {
-        $this->authorize('update', [$admin, $request->filled('password')]);
-
+        // Role-escalation guards live in AdminUpdateRequest::authorize().
         return $this->adminRoles->update($admin, $request->validated(), $request->file('avatar'));
     }
 

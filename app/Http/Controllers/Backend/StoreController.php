@@ -10,40 +10,23 @@ use App\Http\Requests\Backend\StorePageUpdateRequest;
 use App\Models\Store;
 use App\Models\StoreImages;
 use App\Models\StorePage;
+use App\Queries\StoreIndexQuery;
 use App\Services\Catalog\StoreService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
-    protected $stores;
-
-    public function __construct(StoreService $stores)
-    {
-        $this->stores = $stores;
+    public function __construct(
+        protected StoreService $stores,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request, StoreIndexQuery $query): LengthAwarePaginator
     {
         $this->authorize('viewAny', Store::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Store::query()
-            ->when($request->filled('country_id'), function ($query) use ($request) {
-                $query->where('country_id', $request->input('country_id'));
-            })
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $term = $request->input('search');
-                $query->whereHas('pages', function ($pages) use ($term) {
-                    $pages->where('name', 'like', '%' . $term . '%')
-                        ->orWhere('title', 'like', '%' . $term . '%');
-                });
-            })
-            ->when($request->boolean('country'), function ($query) {
-                $query->with('country');
-            })
-            ->adminFormula()
-            ->paginate($perPage);
+        return $query->paginate($request);
     }
 
     public function store(StoreCreateRequest $request)
@@ -74,10 +57,7 @@ class StoreController extends Controller
 
     public function deleteImage(StoreImages $image)
     {
-        $store = $image->store;
-        if (!$store) {
-            abort(404);
-        }
+        $store = $image->store ?? abort(404);
         $this->authorize('update', $store);
 
         return $this->stores->deleteImage($image);

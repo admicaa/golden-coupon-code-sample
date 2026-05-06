@@ -10,36 +10,25 @@ use App\Http\Requests\Backend\MetaTagsRequest;
 use App\Models\Coupon;
 use App\Models\CouponPages;
 use App\Models\StorePageMetaTag;
+use App\Queries\CouponIndexQuery;
 use App\Services\Catalog\CouponService;
 use App\Services\Content\MetaTagService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
-    protected $coupons;
-    protected $metaTags;
-
-    public function __construct(CouponService $coupons, MetaTagService $metaTags)
-    {
-        $this->coupons = $coupons;
-        $this->metaTags = $metaTags;
+    public function __construct(
+        protected CouponService $coupons,
+        protected MetaTagService $metaTags,
+    ) {
     }
 
-    public function index(Request $request)
+    public function index(Request $request, CouponIndexQuery $query): LengthAwarePaginator
     {
         $this->authorize('viewAny', Coupon::class);
 
-        $perPage = per_page($request->input('itemsPerPage'));
-
-        return Coupon::query()
-            ->when($request->filled('store_id'), function ($query) use ($request) {
-                $query->where('store_id', $request->input('store_id'));
-            })
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('coupon_key', 'like', '%' . $request->input('search') . '%');
-            })
-            ->adminFormula()
-            ->paginate($perPage);
+        return $query->paginate($request);
     }
 
     public function store(CouponCreateRequest $request)
@@ -66,12 +55,7 @@ class CouponController extends Controller
 
     public function destroyMetaTag(StorePageMetaTag $tag)
     {
-        $page = $tag->couponPage;
-        
-        if (!$page) {
-            abort(404);
-        }
-
+        $page = $tag->couponPage ?? abort(404);
         $this->authorize('update', $page->coupon);
 
         $tag->delete();

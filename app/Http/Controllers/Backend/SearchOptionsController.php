@@ -9,17 +9,16 @@ use App\Models\Coupon;
 use App\Models\SearchOptions;
 use App\Models\Store;
 use App\Services\Catalog\SearchOptionService;
+use Illuminate\Database\Eloquent\Collection;
 
 class SearchOptionsController extends Controller
 {
-    protected $options;
-
-    public function __construct(SearchOptionService $options)
-    {
-        $this->options = $options;
+    public function __construct(
+        protected SearchOptionService $options,
+    ) {
     }
 
-    public function index()
+    public function index(): Collection
     {
         $this->authorize('viewAny', SearchOptions::class);
 
@@ -49,16 +48,22 @@ class SearchOptionsController extends Controller
         return $option->id;
     }
 
+    /**
+     * Attach search options to a store or a coupon.
+     *
+     * The request validates that exactly one of `store_id` / `coupon_id` is
+     * present. We authorize both the assign capability and update on the target.
+     */
     public function assign(SearchOptionAssignRequest $request)
     {
         $this->authorize('assign', SearchOptions::class);
 
-        $element = $request->filled('coupon_id')
+        $target = $request->filled('coupon_id')
             ? Coupon::findOrFail($request->input('coupon_id'))
             : Store::findOrFail($request->input('store_id'));
 
-        $this->authorize('update', $element);
+        $this->authorize('update', $target);
 
-        return $this->options->assign($element, $request->input('options', []));
+        return $this->options->assign($target, $request->input('options', []));
     }
 }

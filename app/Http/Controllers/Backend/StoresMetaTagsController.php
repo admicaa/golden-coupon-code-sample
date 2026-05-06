@@ -10,11 +10,9 @@ use App\Services\Content\MetaTagService;
 
 class StoresMetaTagsController extends Controller
 {
-    protected $metaTags;
-
-    public function __construct(MetaTagService $metaTags)
-    {
-        $this->metaTags = $metaTags;
+    public function __construct(
+        protected MetaTagService $metaTags,
+    ) {
     }
 
     public function update(MetaTagsRequest $request, StorePage $storePage)
@@ -26,10 +24,7 @@ class StoresMetaTagsController extends Controller
 
     public function destroy(StorePageMetaTag $tag)
     {
-        $page = $tag->storePage;
-        if (!$page) {
-            abort(404);
-        }
+        $page = $tag->storePage ?? abort(404);
         $this->authorize('update', $page);
 
         $tag->delete();
