@@ -35,7 +35,17 @@ class AdminUsersPolicy
             return $user->can('edit-his-profile-data');
         }
 
-        return $user->can('edit-admins') && !$admin->hasRole('super-admin');
+        if (!$user->can('edit-admins') || $admin->hasRole('super-admin')) {
+            return false;
+        }
+
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        return $admin->getAllPermissions()->pluck('name')
+            ->diff($user->getAllPermissions()->pluck('name'))
+            ->isEmpty();
     }
 
     public function delete(Admin $user, Admin $admin)
@@ -44,7 +54,17 @@ class AdminUsersPolicy
             return false;
         }
 
-        return $user->can('delete-admins');
+        if (!$user->can('delete-admins')) {
+            return false;
+        }
+
+        if ($user->hasRole('super-admin')) {
+            return true;
+        }
+
+        return $admin->getAllPermissions()->pluck('name')
+            ->diff($user->getAllPermissions()->pluck('name'))
+            ->isEmpty();
     }
 
     protected function canUpdatePassword(Admin $user, $wantToUpdatePassword, $sameUser)

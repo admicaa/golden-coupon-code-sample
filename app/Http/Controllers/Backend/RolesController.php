@@ -5,12 +5,19 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\RoleRequest;
 use App\Models\Permission;
+use App\Services\Admin\RolePermissionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
+    protected $roles;
+
+    public function __construct(RolePermissionService $roles)
+    {
+        $this->roles = $roles;
+    }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', Role::class);
@@ -32,34 +39,14 @@ class RolesController extends Controller
     {
         $this->authorize('create', Role::class);
 
-        return DB::transaction(function () use ($request) {
-            $role = Role::create([
-                'name' => $request->input('name'),
-                'guard_name' => 'admin',
-            ]);
-
-            foreach ($request->input('permissions') as $permission) {
-                $this->addPermissionToRole(Permission::find($permission['id']), $role);
-            }
-
-            return $role;
-        });
+        return $this->roles->create($request->validated());
     }
 
     public function update(RoleRequest $request, Role $role)
     {
         $this->authorize('update', $role);
 
-        return DB::transaction(function () use ($request, $role) {
-            $role->update(['name' => $request->input('name')]);
-            $role->permissions()->sync([]);
-
-            foreach ($request->input('permissions') as $permission) {
-                $this->addPermissionToRole(Permission::find($permission['id']), $role);
-            }
-
-            return $role->fresh('permissions');
-        });
+        return $this->roles->update($role, $request->validated());
     }
 
     public function destroy(Role $role)
@@ -68,13 +55,5 @@ class RolesController extends Controller
         $role->delete();
 
         return $role->id;
-    }
-
-    protected function addPermissionToRole(Permission $permission, Role $role)
-    {
-        $role->givePermissionTo($permission->name);
-        foreach ($permission->required as $required) {
-            $this->addPermissionToRole($required, $role);
-        }
     }
 }
