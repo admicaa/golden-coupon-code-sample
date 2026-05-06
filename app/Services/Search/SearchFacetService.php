@@ -79,27 +79,59 @@ class SearchFacetService
             ->all();
     }
 
+    /**
+     * Filter facet counts.
+     *
+     * The previous implementation used `JOIN ... ON coupon_id = ... orOn store_id = ...`,
+     * which made it hard to reason about NULL handling and blurred the two
+     * logical pivots that share `search_options_coupons` (one keyed by
+     * coupon_id, one keyed by store_id). We now express each path as its own
+     * subquery and `UNION ALL` them; the outer `COUNT(DISTINCT pair)` keeps
+     * a coupon/store from being double-counted when both its store and the
+     * coupon itself carry the same filter option.
+     */
     public function buildFiltersFacet($term, array $countries, $storeOnly, $couponOnly)
     {
-        $counts = DB::query()
-            ->fromSub(
-                $this->searchQueryService->buildMatchedPairsQuery($term, $countries, [], $storeOnly, $couponOnly),
-                'matched_pairs'
-            )
-            ->join('search_options_coupons', function ($join) {
-                $join->on('matched_pairs.coupon_id', '=', 'search_options_coupons.coupon_id')
-                    ->orOn('matched_pairs.store_id', '=', 'search_options_coupons.store_id');
-            })
+        $matchedPairs = $this->searchQueryService
+            ->buildMatchedPairsQuery($term, $countries, [], $storeOnly, $couponOnly);
+
+        $pairExpression = "CONCAT(COALESCE(matched_pairs.store_id, 0), ':', COALESCE(matched_pairs.coupon_id, 0))";
+
+        $byCoupon = DB::query()
+            ->fromSub(clone $matchedPairs, 'matched_pairs')
+            ->join('search_options_coupons', 'search_options_coupons.coupon_id', '=', 'matched_pairs.coupon_id')
             ->whereNotNull('search_options_coupons.search_option_id')
-            ->selectRaw('search_options_coupons.search_option_id AS search_option_id')
-            ->selectRaw($this->distinctPairCountExpression() . ' AS pair_count')
-            ->groupBy('search_options_coupons.search_option_id')
+            ->whereNotNull('search_options_coupons.coupon_id')
+            ->select([
+                DB::raw('search_options_coupons.search_option_id AS search_option_id'),
+                DB::raw($pairExpression . ' AS pair_key'),
+            ]);
+
+        $byStore = DB::query()
+            ->fromSub(clone $matchedPairs, 'matched_pairs')
+            ->join('search_options_coupons', 'search_options_coupons.store_id', '=', 'matched_pairs.store_id')
+            ->whereNotNull('search_options_coupons.search_option_id')
+            ->whereNotNull('search_options_coupons.store_id')
+            ->select([
+                DB::raw('search_options_coupons.search_option_id AS search_option_id'),
+                DB::raw($pairExpression . ' AS pair_key'),
+            ]);
+
+        $unioned = $byCoupon->unionAll($byStore);
+
+        $counts = DB::query()
+            ->fromSub($unioned, 'pivot_matches')
+            ->select('search_option_id')
+            ->selectRaw('COUNT(DISTINCT pair_key) AS pair_count')
+            ->groupBy('search_option_id')
             ->get()
             ->pluck('pair_count', 'search_option_id');
 
-        return SearchOptions::with(['pages' => function ($query) {
-            $query->whereIn('language', language_fallbacks());
-        }])->get()
+        return SearchOptions::query()
+            ->with(['pages' => function ($query) {
+                $query->whereIn('language', language_fallbacks());
+            }])
+            ->get()
             ->map(function ($option) use ($counts) {
                 return [
                     'id' => $option->id,
