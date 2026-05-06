@@ -24,6 +24,8 @@ class CreateSearchOptionsPagesTable extends Migration
             $table->string('name')->nullable();
 
             $table->timestamps();
+
+            $table->unique(['search_option_id', 'language'], 'search_options_pages_option_id_language_unique');
         });
     }
 

@@ -25,6 +25,9 @@ class CreateArticlePagesTable extends Migration
             $table->text('description')->nullable();
 
             $table->timestamps();
+
+            $table->unique('slug', 'article_pages_slug_unique');
+            $table->unique(['article_id', 'language'], 'article_pages_article_id_language_unique');
         });
     }
 

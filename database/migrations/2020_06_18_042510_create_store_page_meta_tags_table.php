@@ -20,6 +20,8 @@ class CreateStorePageMetaTagsTable extends Migration
             $table->string('name');
             $table->text('value');
             $table->timestamps();
+
+            $table->index(['page_id', 'name'], 'store_page_meta_tags_page_name_idx');
         });
     }
 

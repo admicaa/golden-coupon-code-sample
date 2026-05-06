@@ -14,9 +14,10 @@ class AddCountryPageIdToStorePageMetaTags extends Migration
     public function up()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
             $table->unsignedBigInteger('country_name_id')->nullable();
             $table->foreign('country_name_id')->references('id')->on('country_names')->onDelete('cascade');
+
+            $table->index(['country_name_id', 'name'], 'store_page_meta_tags_country_name_name_idx');
         });
     }
 
@@ -28,7 +29,9 @@ class AddCountryPageIdToStorePageMetaTags extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
+            $table->dropIndex('store_page_meta_tags_country_name_name_idx');
+            $table->dropForeign(['country_name_id']);
+            $table->dropColumn('country_name_id');
         });
     }
 }

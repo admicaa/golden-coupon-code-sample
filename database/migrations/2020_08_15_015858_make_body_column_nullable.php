@@ -26,8 +26,9 @@ class MakeBodyColumnNullable extends Migration
      */
     public function down()
     {
+        \Illuminate\Support\Facades\DB::table('store_pages')->whereNull('body')->update(['body' => '']);
         Schema::table('store_pages', function (Blueprint $table) {
-            //
+            $table->longText('body')->nullable(false)->change();
         });
     }
 }

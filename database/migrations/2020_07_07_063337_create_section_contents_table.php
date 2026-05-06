@@ -36,8 +36,9 @@ class CreateSectionContentsTable extends Migration
 
             $table->boolean('nuxt_link')->default(0);
 
-
             $table->timestamps();
+
+            $table->index(['section_id', 'sort'], 'section_contents_section_sort_idx');
         });
     }
 

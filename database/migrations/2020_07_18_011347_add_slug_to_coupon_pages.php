@@ -27,7 +27,8 @@ class AddSlugToCouponPages extends Migration
     public function down()
     {
         Schema::table('coupon_pages', function (Blueprint $table) {
-            //
+            $table->dropUnique('coupon_pages_slug_unique');
+            $table->dropColumn('slug');
         });
     }
 }

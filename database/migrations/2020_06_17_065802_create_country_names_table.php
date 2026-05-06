@@ -23,6 +23,8 @@ class CreateCountryNamesTable extends Migration
             $table->string('header_name')->nullable();
             $table->string('name');
             $table->timestamps();
+
+            $table->unique(['country_id', 'language'], 'country_names_country_id_language_unique');
         });
     }
 

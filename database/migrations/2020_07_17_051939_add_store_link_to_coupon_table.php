@@ -27,7 +27,7 @@ class AddStoreLinkToCouponTable extends Migration
     public function down()
     {
         Schema::table('coupons', function (Blueprint $table) {
-            //
+            $table->dropColumn('store_link');
         });
     }
 }

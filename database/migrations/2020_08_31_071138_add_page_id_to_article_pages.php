@@ -28,7 +28,8 @@ class AddPageIdToArticlePages extends Migration
     public function down()
     {
         Schema::table('section_contents', function (Blueprint $table) {
-            //
+            $table->dropForeign(['page_id']);
+            $table->dropColumn('page_id');
         });
     }
 }

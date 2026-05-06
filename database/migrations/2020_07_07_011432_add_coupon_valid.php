@@ -14,9 +14,10 @@ class AddCouponValid extends Migration
     public function up()
     {
         Schema::table('coupons', function (Blueprint $table) {
-            //
             $table->boolean('valid')->default(true);
             $table->dateTime('valid_until')->nullable();
+
+            $table->index(['valid', 'valid_until'], 'coupons_valid_valid_until_idx');
         });
     }
 
@@ -28,7 +29,8 @@ class AddCouponValid extends Migration
     public function down()
     {
         Schema::table('coupons', function (Blueprint $table) {
-            //
+            $table->dropIndex('coupons_valid_valid_until_idx');
+            $table->dropColumn(['valid', 'valid_until']);
         });
     }
 }

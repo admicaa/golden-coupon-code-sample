@@ -27,7 +27,7 @@ class AddCanoncialLinkToMetaTagsTable extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
+            $table->dropColumn('type');
         });
     }
 }

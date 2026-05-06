@@ -27,6 +27,9 @@ class CreateSectionsTable extends Migration
             $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
 
             $table->timestamps();
+
+            $table->index(['store_id', 'sort'], 'sections_store_sort_idx');
+            $table->index(['country_id', 'sort'], 'sections_country_sort_idx');
         });
     }
 

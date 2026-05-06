@@ -29,7 +29,7 @@ class AddImagePathToImagesTable extends Migration
     public function down()
     {
         Schema::table('store_images', function (Blueprint $table) {
-            //
+            $table->dropColumn(['alt', 'title', 'image_path']);
         });
     }
 }

@@ -26,7 +26,7 @@ class AddIsBlogToSectionsTable extends Migration
     public function down()
     {
         Schema::table('sections', function (Blueprint $table) {
-            //
+            $table->dropColumn('is_blog');
         });
     }
 }

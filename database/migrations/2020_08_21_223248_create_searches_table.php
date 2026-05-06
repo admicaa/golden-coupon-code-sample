@@ -27,6 +27,9 @@ class CreateSearchesTable extends Migration
             $table->string('language')->default(language());
             $table->foreign('language')->references('shortcut')->on('languages')->onDelete('cascade');
             $table->timestamps();
+
+            $table->index(['coupon_id', 'store_id'], 'searches_coupon_store_idx');
+            $table->index(['store_id', 'coupon_id'], 'searches_store_coupon_idx');
         });
         $fullStageArray  = [];
         for ($i = 1; $i < 6; $i++) {

@@ -25,6 +25,8 @@ class CreatePermissionRequirementsTable extends Migration
                 ->references('id')
                 ->on('permissions')
                 ->onDelete('cascade');
+
+            $table->primary(['permission_id', 'required_permission_id']);
         });
     }
 

@@ -24,6 +24,8 @@ class CreateCouponPagesTable extends Migration
 
 
             $table->timestamps();
+
+            $table->unique(['coupon_id', 'language'], 'coupon_pages_coupon_id_language_unique');
         });
     }
 

@@ -26,11 +26,9 @@ class CreateSectionPagesTable extends Migration
             $table->string('subtitle')->nullable();
             $table->text('description')->nullable();
 
-
-
-
-
             $table->timestamps();
+
+            $table->unique(['section_id', 'language'], 'section_pages_section_id_language_unique');
         });
     }
 

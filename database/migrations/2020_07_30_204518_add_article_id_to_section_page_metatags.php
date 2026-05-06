@@ -14,9 +14,10 @@ class AddArticleIdToSectionPageMetatags extends Migration
     public function up()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
             $table->unsignedBigInteger('article_id')->nullable();
             $table->foreign('article_id')->references('id')->on('article_pages')->onDelete('cascade');
+
+            $table->index(['article_id', 'name'], 'store_page_meta_tags_article_name_idx');
         });
     }
 
@@ -28,7 +29,7 @@ class AddArticleIdToSectionPageMetatags extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
+            $table->dropIndex('store_page_meta_tags_article_name_idx');
             $table->dropForeign('store_page_meta_tags_article_id_foreign');
             $table->dropColumn('article_id');
         });

@@ -29,6 +29,8 @@ class CreateStorePagesTable extends Migration
             $table->foreign('language')->references('shortcut')->on('languages')->onDelete('cascade');
 
             $table->timestamps();
+
+            $table->unique(['store_id', 'language'], 'store_pages_store_id_language_unique');
         });
     }
 

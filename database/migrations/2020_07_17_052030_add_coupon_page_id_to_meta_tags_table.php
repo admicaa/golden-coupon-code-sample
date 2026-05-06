@@ -14,9 +14,10 @@ class AddCouponPageIdToMetaTagsTable extends Migration
     public function up()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
             $table->unsignedBigInteger('coupon_page_id')->nullable();
             $table->foreign('coupon_page_id')->references('id')->on('coupon_pages')->onDelete('cascade');
+
+            $table->index(['coupon_page_id', 'name'], 'store_page_meta_tags_coupon_page_name_idx');
         });
     }
 
@@ -28,7 +29,9 @@ class AddCouponPageIdToMetaTagsTable extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            //
+            $table->dropIndex('store_page_meta_tags_coupon_page_name_idx');
+            $table->dropForeign(['coupon_page_id']);
+            $table->dropColumn('coupon_page_id');
         });
     }
 }
