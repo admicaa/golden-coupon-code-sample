@@ -23,7 +23,7 @@ class Section extends Model
 
     public function getPageAttribute()
     {
-        return $this->localizedRelation('pages');
+        return $this->localizedRelationOrNull('pages') ?: $this->localizedRelation('pages');
     }
 
     public function store()

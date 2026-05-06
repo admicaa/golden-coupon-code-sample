@@ -27,7 +27,7 @@ class SearchOptions extends Model
 
     public function getPageAttribute()
     {
-        return $this->mainPage();
+        return $this->localizedRelationOrNull('pages') ?: $this->mainPage();
     }
 
     public function mainPage()

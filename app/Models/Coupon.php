@@ -66,7 +66,9 @@ class Coupon extends Model
 
     public function getPageAttribute()
     {
-        return $this->mainPage()->only($this->pageColumns());
+        $page = $this->localizedRelationOrNull('pages') ?: $this->mainPage();
+
+        return $page ? $page->only($this->pageColumns()) : [];
     }
 
     protected function pageColumns()

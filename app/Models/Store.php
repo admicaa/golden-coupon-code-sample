@@ -92,7 +92,13 @@ class Store extends Model
 
     public function getPageAttribute()
     {
-        return $this->mainPage()->only($this->pageColumns());
+        // Prefer eager-loaded data (front/admin Formula scopes set this up).
+        // Fall back to a single targeted query only if `pages` was not loaded
+        // by the caller. Returns an empty array when no localized row exists
+        // so list responses never crash mid-serialization.
+        $page = $this->localizedRelationOrNull('pages') ?: $this->mainPage();
+
+        return $page ? $page->only($this->pageColumns()) : [];
     }
 
     protected function pageColumns()
