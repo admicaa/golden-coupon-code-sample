@@ -26,9 +26,21 @@ class Coupon extends Model
 
     public function getSearchUpdateAttribute()
     {
+        $countryName = optional(optional($this->store)->country)->name;
+
         return [
-            'stage_3' => $this->coupon_key . ' ' . $this->store->country->name,
-            'stage_4' => $this->redirect_url . ' - ' . $this->percentage . ' %'
+            'stage_3' => trim(implode(' ', array_filter([
+                $this->coupon_key,
+                $countryName,
+            ], function ($value) {
+                return $value !== null && $value !== '';
+            }))),
+            'stage_4' => trim(implode(' - ', array_filter([
+                $this->redirect_url,
+                $this->percentage !== null ? $this->percentage . ' %' : null,
+            ], function ($value) {
+                return $value !== null && $value !== '';
+            }))),
         ];
     }
 

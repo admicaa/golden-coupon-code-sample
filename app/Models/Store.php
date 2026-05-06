@@ -21,9 +21,11 @@ class Store extends Model
 
     public function getSearchUpdateAttribute()
     {
+        $countryName = optional($this->country)->name;
+
         return [
-            'stage_3' => $this->country->name,
-            'stage_4' => $this->slug
+            'stage_3' => $countryName ?: '',
+            'stage_4' => $this->slug ?: '',
         ];
     }
 
