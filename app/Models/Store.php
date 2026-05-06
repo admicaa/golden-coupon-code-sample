@@ -71,7 +71,6 @@ class Store extends Model
 
     public function scopeAdminFormula($query)
     {
-
         return $query->with(['pages' => function ($query) {
             return $query->AdminFormula();
         }, 'images', 'options']);
