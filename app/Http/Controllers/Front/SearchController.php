@@ -11,12 +11,18 @@ use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
+    /**
+     * Public search endpoint.
+     *
+     * Returns paginated results plus three facets (types, countries, filters)
+     * on the first page only — subsequent pages skip facet computation since
+     * the values are stable across the result set.
+     */
     public function index(
         Request $request,
         SearchQueryService $searchQueryService,
-        SearchFacetService $searchFacetService
-    )
-    {
+        SearchFacetService $searchFacetService,
+    ): array {
         $data = $this->validate($request, [
             'q' => 'nullable|string|max:191',
             'countries' => 'array|max:30',
@@ -32,24 +38,29 @@ class SearchController extends Controller
         $types = $data['types'] ?? [];
         $storeOnly = in_array('stores', $types, true);
         $couponOnly = in_array('coupons', $types, true);
+        $term = $data['q'] ?? null;
 
+        // The public results don't carry the long body/description text.
         $request->merge(['hide_tour_page_description' => true]);
 
         $results = $searchQueryService
             ->applyResultRelations(
-                $searchQueryService->build($data['q'] ?? null, $countryIds, $filterIds, $storeOnly, $couponOnly)
+                $searchQueryService->build($term, $countryIds, $filterIds, $storeOnly, $couponOnly)
             )
             ->paginate(10)
             ->appends($request->query());
 
         $facets = $request->filled('page')
             ? null
-            : $searchFacetService->build($data['q'] ?? null, $countryIds, $filterIds, $storeOnly, $couponOnly);
+            : $searchFacetService->build($term, $countryIds, $filterIds, $storeOnly, $couponOnly);
 
         return ['results' => $results, 'facets' => $facets];
     }
 
-    protected function resolveCountries(array $countryNames)
+    /**
+     * Resolve user-facing country names to country ids.
+     */
+    protected function resolveCountries(array $countryNames): array
     {
         if (empty($countryNames)) {
             return [];
@@ -63,7 +74,10 @@ class SearchController extends Controller
             ->all();
     }
 
-    protected function resolveFilters(array $filterNames)
+    /**
+     * Resolve user-facing filter names to search-option ids.
+     */
+    protected function resolveFilters(array $filterNames): array
     {
         if (empty($filterNames)) {
             return [];

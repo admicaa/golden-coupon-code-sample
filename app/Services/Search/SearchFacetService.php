@@ -8,15 +8,25 @@ use Illuminate\Support\Facades\DB;
 
 class SearchFacetService
 {
-    protected $searchQueryService;
-
-    public function __construct(SearchQueryService $searchQueryService)
-    {
-        $this->searchQueryService = $searchQueryService;
+    public function __construct(
+        protected SearchQueryService $searchQueryService,
+    ) {
     }
 
-    public function build($term, array $countries, array $filters, $storeOnly, $couponOnly)
-    {
+    /**
+     * Build the three facets returned alongside search results.
+     *
+     * Each facet counts distinct (store_id, coupon_id) pairs to avoid the
+     * double-counting that a naïve sum would produce when a row has both a
+     * store and a coupon attached.
+     */
+    public function build(
+        ?string $term,
+        array $countries,
+        array $filters,
+        bool $storeOnly,
+        bool $couponOnly,
+    ): array {
         $baseQuery = $this->searchQueryService->buildMatchedPairsQuery(
             $term,
             $countries,
@@ -32,7 +42,11 @@ class SearchFacetService
         ];
     }
 
-    public function buildTypeFacet($baseQuery)
+    /**
+     * Stores vs Coupons counts. Uses COUNT(DISTINCT ...) so a search row
+     * that belongs to both a store and a coupon counts once for each.
+     */
+    public function buildTypeFacet($baseQuery): array
     {
         $counts = DB::query()
             ->fromSub(clone $baseQuery, 'matched_pairs')
@@ -49,7 +63,22 @@ class SearchFacetService
         ];
     }
 
-    public function buildCountriesFacet($term, array $filters, $storeOnly, $couponOnly)
+    /**
+     * Country counts.
+     *
+     * The country facet ignores the user's country selection on purpose —
+     * we want to show how many results each country *could* contribute if
+     * the user toggled it on. The current `$filters` selection is preserved.
+     *
+     * A search row is associated with a country through either:
+     *   - searches.store_id  → stores.country_id, or
+     *   - searches.coupon_id → coupons.store_id → stores.country_id.
+     *
+     * Both paths are LEFT JOINed and we COALESCE between them. Counts are
+     * COUNT(DISTINCT pair) to avoid duplicate counting when both columns
+     * are present on the same row.
+     */
+    public function buildCountriesFacet(?string $term, array $filters, bool $storeOnly, bool $couponOnly): array
     {
         $counts = DB::query()
             ->fromSub(
@@ -68,23 +97,32 @@ class SearchFacetService
         return Country::query()
             ->frontFormula()
             ->get(['id', 'iso'])
-            ->map(function ($country) use ($counts) {
-                return [
-                    'name' => $country->name,
-                    'iso' => $country->iso,
-                    'count' => (int) $counts->get($country->id, 0),
-                ];
-            })
+            ->map(fn ($country) => [
+                'name' => $country->name,
+                'iso' => $country->iso,
+                'count' => (int) $counts->get($country->id, 0),
+            ])
             ->values()
             ->all();
     }
 
-    public function buildFiltersFacet($term, array $countries, $storeOnly, $couponOnly)
+    /**
+     * Filter (search option) counts.
+     *
+     * Mirrors the country facet: we ignore the active filter selection so
+     * the user can see how many extra results each filter would yield.
+     *
+     * A pivot row in `search_options_coupons` carries either a `store_id` or
+     * a `coupon_id`. We UNION ALL the two halves — a JOIN with OR conditions
+     * would produce a Cartesian explosion when both columns happen to match.
+     * The CONCAT pair_key collapses any remaining duplicates via DISTINCT.
+     */
+    public function buildFiltersFacet(?string $term, array $countries, bool $storeOnly, bool $couponOnly): array
     {
         $matchedPairs = $this->searchQueryService
             ->buildMatchedPairsQuery($term, $countries, [], $storeOnly, $couponOnly);
 
-        $pairExpression = "CONCAT(COALESCE(matched_pairs.store_id, 0), ':', COALESCE(matched_pairs.coupon_id, 0))";
+        $pairKey = "CONCAT(COALESCE(matched_pairs.store_id, 0), ':', COALESCE(matched_pairs.coupon_id, 0))";
 
         $byCoupon = DB::query()
             ->fromSub(clone $matchedPairs, 'matched_pairs')
@@ -93,7 +131,7 @@ class SearchFacetService
             ->whereNotNull('search_options_coupons.coupon_id')
             ->select([
                 DB::raw('search_options_coupons.search_option_id AS search_option_id'),
-                DB::raw($pairExpression . ' AS pair_key'),
+                DB::raw($pairKey . ' AS pair_key'),
             ]);
 
         $byStore = DB::query()
@@ -103,7 +141,7 @@ class SearchFacetService
             ->whereNotNull('search_options_coupons.store_id')
             ->select([
                 DB::raw('search_options_coupons.search_option_id AS search_option_id'),
-                DB::raw($pairExpression . ' AS pair_key'),
+                DB::raw($pairKey . ' AS pair_key'),
             ]);
 
         $unioned = $byCoupon->unionAll($byStore);
@@ -117,23 +155,25 @@ class SearchFacetService
             ->pluck('pair_count', 'search_option_id');
 
         return SearchOptions::query()
-            ->with(['pages' => function ($query) {
-                $query->whereIn('language', language_fallbacks());
-            }])
+            ->with(['pages' => fn ($q) => $q->whereIn('language', language_fallbacks())])
             ->get()
-            ->map(function ($option) use ($counts) {
-                return [
-                    'id' => $option->id,
-                    'name' => optional($option->page)->name,
-                    'count' => (int) $counts->get($option->id, 0),
-                ];
-            })
+            ->map(fn ($option) => [
+                'id' => $option->id,
+                'name' => optional($option->page)->name,
+                'count' => (int) $counts->get($option->id, 0),
+            ])
             ->values()
             ->all();
     }
 
-    public function distinctPairCountExpression($storeColumn = 'matched_pairs.store_id', $couponColumn = 'matched_pairs.coupon_id')
-    {
-        return 'COUNT(DISTINCT CONCAT(COALESCE(' . $storeColumn . ', 0), \':\', COALESCE(' . $couponColumn . ', 0)))';
+    /**
+     * SQL expression counting distinct (store_id, coupon_id) pairs.
+     * Both columns may legitimately be NULL, so we COALESCE to 0 first.
+     */
+    public function distinctPairCountExpression(
+        string $storeColumn = 'matched_pairs.store_id',
+        string $couponColumn = 'matched_pairs.coupon_id',
+    ): string {
+        return "COUNT(DISTINCT CONCAT(COALESCE($storeColumn, 0), ':', COALESCE($couponColumn, 0)))";
     }
 }
