@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Searchable;
 use App\Traits\Search;
 
 class CouponPages extends Model
