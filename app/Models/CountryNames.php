@@ -5,7 +5,6 @@ namespace App\Models;
 
 class CountryNames extends Model
 {
-    //
     protected $with = ['metatags'];
 
     public function country()

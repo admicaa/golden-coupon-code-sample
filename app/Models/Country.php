@@ -7,7 +7,6 @@ use App\Models\CountryNames;
 
 class Country extends Model
 {
-    //
     use ResolvesLocalizedRelations;
 
     protected $hidden = ['created_at', 'updated_at'];
@@ -54,7 +53,7 @@ class Country extends Model
     {
         return optional($this->resolvedName())->name;
     }
-    // stores
+
     public function scopeSectionsFormula($query)
     {
         return $query->with(['sections' => function ($query) {

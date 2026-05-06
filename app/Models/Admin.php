@@ -13,33 +13,20 @@ class Admin extends Authenticatable
     use HasRoles;
     use Notifiable;
 
-    /**
-     * Spatie\Permission scopes roles & permissions to the `admin` guard.
-     */
+    /** Spatie\Permission scopes roles & permissions to the `admin` guard. */
     protected $guard_name = 'admin';
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+
+    /** @var array<int, string> */
     protected $fillable = [
-        'name', 'email', 'password', 'image_path'
+        'name', 'email', 'password', 'image_path',
     ];
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
+    /** @var array<int, string> */
     protected $hidden = [
-        'password', 'remember_token', 'permissions', 'image_path'
+        'password', 'remember_token', 'permissions', 'image_path',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
+    /** @var array<string, string> */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];

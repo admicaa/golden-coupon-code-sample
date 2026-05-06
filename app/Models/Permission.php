@@ -6,7 +6,6 @@ use Spatie\Permission\Models\Permission as SpatiePermission;
 
 class Permission extends SpatiePermission
 {
-    //
     protected $visible = ['id', 'name', 'required'];
     protected $with = ['required'];
     public function required()

@@ -11,12 +11,6 @@ class AuthController extends Controller
 {
     /**
      * Authenticate an admin and issue a Passport personal access token.
-     *
-     * The previous implementation called `Auth::guard('admin-api')->attempt()`
-     * to use a session guard purely for credential validation (a workaround
-     * for `smartins/passport-multiauth`). Native Passport supports validating
-     * credentials directly via the user provider, so we drop that detour while
-     * keeping the response shape identical: `{ user, token }`.
      */
     public function login(AdminLoginRequest $request): JsonResponse
     {

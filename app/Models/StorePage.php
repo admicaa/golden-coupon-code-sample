@@ -6,7 +6,6 @@ use App\Traits\Search;
 
 class StorePage extends Model
 {
-    //
     use Search;
     public $search_column_id = 'store_id';
     public function getSearchColumnAttribute()

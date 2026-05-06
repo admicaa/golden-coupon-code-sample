@@ -7,7 +7,6 @@ use App\Traits\Search;
 
 class Store extends Model
 {
-    //
     use Search;
     use ResolvesLocalizedRelations;
     protected $appends = ['page'];

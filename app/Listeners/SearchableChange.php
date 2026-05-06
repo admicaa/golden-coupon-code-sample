@@ -21,7 +21,6 @@ class SearchableChange implements ShouldQueue
      */
     public function __construct()
     {
-        //
     }
 
     /**

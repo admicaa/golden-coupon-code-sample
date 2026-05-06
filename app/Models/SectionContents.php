@@ -5,7 +5,6 @@ namespace App\Models;
 
 class SectionContents extends Model
 {
-    //
     protected $with = ['image'];
     public function article()
     {

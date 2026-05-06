@@ -18,7 +18,6 @@ class SearchableChange
      */
     public function __construct($searchable)
     {
-        //
         $this->searchable = $searchable;
     }
 }

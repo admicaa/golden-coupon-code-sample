@@ -6,7 +6,6 @@ use App\Traits\Search;
 
 class CouponPages extends Model
 {
-    //
     use Search;
     public $search_column_id = 'coupon_id';
 

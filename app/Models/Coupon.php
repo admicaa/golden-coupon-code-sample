@@ -7,7 +7,6 @@ use App\Traits\Search;
 
 class Coupon extends Model
 {
-    //
     use Search;
     use ResolvesLocalizedRelations;
 

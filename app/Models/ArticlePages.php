@@ -5,7 +5,6 @@ namespace App\Models;
 
 class ArticlePages extends Model
 {
-    //
     public function metatags()
     {
         return $this->hasMany(StorePageMetaTag::class, 'article_id', 'id');

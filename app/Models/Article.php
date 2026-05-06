@@ -6,7 +6,6 @@ use App\Models\Concerns\ResolvesLocalizedRelations;
 
 class Article extends Model
 {
-    //
     use ResolvesLocalizedRelations;
 
     protected $appends = ['page'];
