@@ -4,34 +4,10 @@ namespace App\Models\Concerns;
 
 use Illuminate\Support\Collection;
 
-/**
- * Resolves a "localized" relation (one row per language) to the right row for
- * the current request.
- *
- * Two entry points:
- *
- *   - `localizedRelation()` is the strict resolver. If callers want a
- *     guaranteed row (admin endpoints loading a single record), they should
- *     call `mainPage()` from a controller path that already validated input.
- *     Returns `null` when nothing matches; never throws.
- *
- *   - `localizedRelationOrNull()` is the accessor-safe resolver. It NEVER
- *     issues a database query when the relation has not been eager loaded;
- *     this is the form used from `getPageAttribute()` style accessors so a
- *     forgotten `with()` does not turn a list endpoint into an N+1.
- */
 trait ResolvesLocalizedRelations
 {
     protected $localizedRelationCache = [];
 
-    /**
-     * Resolve a localized relation, allowing one targeted query per candidate
-     * language only when the relation has not been eager loaded.
-     *
-     * Returns `null` if no row matches any fallback. The previous version of
-     * this trait called `firstOrFail()` here, which threw mid-serialization
-     * on list endpoints when even one record was missing translations.
-     */
     protected function localizedRelation(string $relation, ?string $language = null)
     {
         $language = $language ?: language();
@@ -73,9 +49,6 @@ trait ResolvesLocalizedRelations
         return null;
     }
 
-    /**
-     * Strictly accessor-safe variant. Only inspects already-loaded data.
-     */
     protected function localizedRelationOrNull(string $relation, ?string $language = null)
     {
         if (!$this->relationLoaded($relation)) {
