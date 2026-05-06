@@ -2,21 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 use App\Models\CountryNames;
 
 class Country extends Model
 {
     //
+    use ResolvesLocalizedRelations;
+
     protected $hidden = ['created_at', 'updated_at'];
 
     protected $appends = ['name', 'header_name', 'metatags'];
-
-    public function __construct()
-    {
-        if (request()->hide_tour_page_description) {
-            $this->setAppends(['name', 'header_name']);
-        }
-    }
 
     public function names()
     {
@@ -25,10 +21,21 @@ class Country extends Model
 
     public function countryName()
     {
-        return $this->names()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('names');
     }
 
-    public function getmetatagsAttribute()
+    protected function getArrayableAppends()
+    {
+        $appends = parent::getArrayableAppends();
+
+        if (request()->hide_tour_page_description) {
+            return array_values(array_diff($appends, ['metatags']));
+        }
+
+        return $appends;
+    }
+
+    public function getMetatagsAttribute()
     {
         return $this->countryName()->metatags;
     }
@@ -52,8 +59,9 @@ class Country extends Model
 
     public function scopeFrontFormula($query)
     {
-
-        return $query;
+        return $query->with(['names' => function ($query) {
+            return $query->where('language', language());
+        }]);
     }
 
     public function stores()
