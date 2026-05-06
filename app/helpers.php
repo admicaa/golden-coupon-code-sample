@@ -3,6 +3,28 @@
 use App\Models\Languages;
 use Illuminate\Support\Facades\Cache;
 
+if (!function_exists('front_storage')) {
+    /**
+     * Resolve an absolute filesystem path under the "front" disk root.
+     *
+     * Mirrors Storage::disk('front')->path($path) but returns a string even
+     * when callers want to use it with the File facade or PHP filesystem
+     * functions directly. Falls back to storage/app/front when
+     * FORNT_END_STORAGE_PATH is not set.
+     */
+    function front_storage($path = '')
+    {
+        $root = config('filesystems.front_storage') ?: storage_path('app/front');
+        $root = rtrim((string) $root, DIRECTORY_SEPARATOR);
+
+        if ($path === '' || $path === null) {
+            return $root;
+        }
+
+        return $root . DIRECTORY_SEPARATOR . ltrim((string) $path, '/' . DIRECTORY_SEPARATOR);
+    }
+}
+
 if (!function_exists('default_language')) {
     function default_language()
     {

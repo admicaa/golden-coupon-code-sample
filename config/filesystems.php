@@ -40,7 +40,7 @@ return [
     | Supported Drivers: "local", "ftp", "sftp", "s3"
     |
     */
-    'front_storage' => env('FORNT_END_STORAGE_PATH'),
+    'front_storage' => env('FORNT_END_STORAGE_PATH', storage_path('app/front')),
     'disks' => [
 
         'local' => [
@@ -56,7 +56,7 @@ return [
         ],
         'front' => [
             'driver' => 'local',
-            'root' =>  env('FORNT_END_STORAGE_PATH'),
+            'root' =>  env('FORNT_END_STORAGE_PATH', storage_path('app/front')),
             'url' => '',
             'visibility' => 'public',
         ],
