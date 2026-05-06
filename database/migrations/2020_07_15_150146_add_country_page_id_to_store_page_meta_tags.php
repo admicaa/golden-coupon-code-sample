@@ -29,8 +29,8 @@ class AddCountryPageIdToStorePageMetaTags extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            $table->dropIndex('store_page_meta_tags_country_name_name_idx');
             $table->dropForeign(['country_name_id']);
+            $table->dropIndex('store_page_meta_tags_country_name_name_idx');
             $table->dropColumn('country_name_id');
         });
     }

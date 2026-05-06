@@ -6,11 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 class AddBlogPageColumnToSectionsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::table('sections', function (Blueprint $table) {
@@ -21,16 +16,11 @@ class AddBlogPageColumnToSectionsTable extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('sections', function (Blueprint $table) {
-            $table->dropIndex('sections_article_sort_idx');
             $table->dropForeign('sections_article_id_foreign');
+            $table->dropIndex('sections_article_sort_idx');
             $table->dropColumn('article_id');
         });
     }

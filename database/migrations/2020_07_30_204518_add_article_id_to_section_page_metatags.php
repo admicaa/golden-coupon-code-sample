@@ -29,8 +29,8 @@ class AddArticleIdToSectionPageMetatags extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            $table->dropIndex('store_page_meta_tags_article_name_idx');
             $table->dropForeign('store_page_meta_tags_article_id_foreign');
+            $table->dropIndex('store_page_meta_tags_article_name_idx');
             $table->dropColumn('article_id');
         });
     }

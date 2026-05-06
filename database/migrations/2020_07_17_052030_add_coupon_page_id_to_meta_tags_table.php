@@ -29,8 +29,8 @@ class AddCouponPageIdToMetaTagsTable extends Migration
     public function down()
     {
         Schema::table('store_page_meta_tags', function (Blueprint $table) {
-            $table->dropIndex('store_page_meta_tags_coupon_page_name_idx');
             $table->dropForeign(['coupon_page_id']);
+            $table->dropIndex('store_page_meta_tags_coupon_page_name_idx');
             $table->dropColumn('coupon_page_id');
         });
     }
