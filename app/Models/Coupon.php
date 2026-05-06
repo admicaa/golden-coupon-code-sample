@@ -56,7 +56,7 @@ class Coupon extends Model
         return $query->with(['store' => function ($query) {
             return $query->frontFormula();
         }, 'pages' => function ($query) {
-            return $query->frontFormula()->where('language', language());
+            return $query->frontFormula()->whereIn('language', language_fallbacks());
         }]);
     }
 
@@ -72,7 +72,7 @@ class Coupon extends Model
 
     protected function pageColumns()
     {
-        if (request()->hide_tour_page_description) {
+        if (should_hide_tour_page_description()) {
             return ['title', 'name', 'slug'];
         }
 

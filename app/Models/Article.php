@@ -28,7 +28,7 @@ class Article extends Model
 
     protected function pageColumns()
     {
-        if (request()->body) {
+        if (should_include_page_body()) {
             return ['title', 'name', 'metatags', 'slug', 'description'];
         }
 
@@ -62,7 +62,7 @@ class Article extends Model
         return $query->with([
             'image',
             'pages' => function ($query) {
-                return $query->frontFormula()->where('language', language());
+                return $query->frontFormula()->whereIn('language', language_fallbacks());
             },
         ]);
     }

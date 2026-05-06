@@ -27,7 +27,7 @@ class MainPageController extends Controller
         $name = CountryNames::where('header_name', $slug)->firstOrFail();
         $country = $name->country;
 
-        if ($name->language !== language()) {
+        if ($name->language !== language() && $country->names()->where('language', language())->exists()) {
             abortJson(['country_id' => $country->countryName()->header_name], 409);
         }
 
@@ -39,7 +39,7 @@ class MainPageController extends Controller
         $page = StorePage::where('slug', $slug)->firstOrFail();
         $store = $page->store;
 
-        if ($page->language !== language()) {
+        if ($page->language !== language() && $store->pages()->where('language', language())->exists()) {
             abortJson(['slug' => $store->page['slug']], 409);
         }
 
@@ -51,7 +51,7 @@ class MainPageController extends Controller
         $page = CouponPages::where('slug', $slug)->firstOrFail();
         $coupon = $page->coupon;
 
-        if ($page->language !== language()) {
+        if ($page->language !== language() && $coupon->pages()->where('language', language())->exists()) {
             abortJson(['slug' => $coupon->page['slug']], 409);
         }
 
@@ -66,7 +66,7 @@ class MainPageController extends Controller
         }
 
         $article = $page->article;
-        if ($page->language !== language()) {
+        if ($page->language !== language() && $article->pages()->where('language', language())->exists()) {
             abortJson(['slug' => $article->page['slug']], 409);
         }
 

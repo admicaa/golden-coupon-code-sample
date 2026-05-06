@@ -69,7 +69,7 @@ class Store extends Model
                 return $query->frontFormula();
             },
             'pages' => function ($query) {
-                return $query->frontFormula()->where('language', language());
+                return $query->frontFormula()->whereIn('language', language_fallbacks());
             },
         ]);
     }
@@ -98,7 +98,7 @@ class Store extends Model
 
     protected function pageColumns()
     {
-        if (request()->body) {
+        if (should_include_page_body()) {
             return ['title', 'name', 'metatags', 'slug', 'body'];
         }
 

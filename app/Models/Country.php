@@ -28,7 +28,7 @@ class Country extends Model
     {
         $appends = parent::getArrayableAppends();
 
-        if (request()->hide_tour_page_description) {
+        if (should_hide_tour_page_description()) {
             return array_values(array_diff($appends, ['metatags']));
         }
 
@@ -60,7 +60,7 @@ class Country extends Model
     public function scopeFrontFormula($query)
     {
         return $query->with(['names' => function ($query) {
-            return $query->where('language', language());
+            return $query->whereIn('language', language_fallbacks());
         }]);
     }
 
