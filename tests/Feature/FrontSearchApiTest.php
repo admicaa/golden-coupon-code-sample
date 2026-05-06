@@ -198,7 +198,6 @@ class FrontSearchApiTest extends TestCase
 
         DB::table('search_options_coupons')->insert([
             ['search_option_id' => $featured->id, 'store_id' => $egyptStore->id],
-            ['search_option_id' => $featured->id, 'store_id' => $egyptStore->id],
             ['search_option_id' => $featured->id, 'coupon_id' => $egyptCoupon->id],
             ['search_option_id' => $online->id, 'store_id' => $uaeStore->id],
             ['search_option_id' => $online->id, 'coupon_id' => $uaeCoupon->id],
