@@ -24,11 +24,6 @@ class Country extends Model
         return $this->localizedRelation('names');
     }
 
-    /**
-     * Accessor-safe view of the localized name row. Prefers the eager-loaded
-     * `names` collection (set up by `frontFormula`), falls back to a single
-     * targeted query, and returns null instead of throwing when no row exists.
-     */
     protected function resolvedName()
     {
         return $this->localizedRelationOrNull('names') ?: $this->countryName();
