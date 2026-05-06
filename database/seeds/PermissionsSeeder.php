@@ -34,7 +34,7 @@ class PermissionsSeeder extends Seeder
                         $permissione->required()->syncWithoutDetaching([$requiredPermission->id]);
                     }
                 }
-                $permission = str_replace('{lang}', '', $permission);
+                continue;
             }
 
             $permission = Permission::firstOrCreate([

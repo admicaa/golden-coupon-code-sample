@@ -21,7 +21,6 @@ class RolesSeeder extends Seeder
                 foreach ($languages as $lang) {
                     $permissions[str_replace('{lang}', $lang->shortcut, $permission)] = [];
                 }
-                $permissions[str_replace('{lang}', '', $permission)] = [];
             } else {
                 $permissions[$permission] = [];
             }
