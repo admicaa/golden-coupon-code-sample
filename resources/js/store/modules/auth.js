@@ -50,9 +50,10 @@ const actions = {
 
 const mutations = {
     loginUserSuccess(state, response) {
+        const token = response['token'];
         state.user = response['user'];
-        Cookie.set('token', response['token'].accessToken);
-        state.token = response['token'].accessToken;
+        Cookie.set('token', token);
+        state.token = token;
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + state.token;
 
         router.push("/backend/dashboard");
