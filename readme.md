@@ -1,10 +1,10 @@
-# Coupons & Stores Admin
+# Coupons & Stores Admin (API)
 
-A Laravel code sample from a real coupons and stores platform. The repo holds the backend API and the Vue 2 admin panel that ran on top of it. The public-facing site lived in a separate repo and consumed the JSON endpoints under `/api/front/*`.
+A Laravel code sample from a real coupons and stores platform. This repo is the backend API only. The Vue 2 admin panel and the public-facing site live in separate repos and consume these JSON endpoints.
 
-The admin side manages stores, coupons, articles, countries, search filters, localized content, roles, and permissions.
+The API manages stores, coupons, articles, countries, search filters, localized content, roles, and permissions.
 
-Originally built on Laravel 6, PHP 7.2, and Vue 2. The backend was upgraded to Laravel 12 and PHP 8.2. Vue 2 and the legacy Laravel app structure were kept on purpose.
+Originally built on Laravel 6 and PHP 7.2. The backend was upgraded to Laravel 12 and PHP 8.2. The legacy Laravel app structure was kept on purpose.
 
 ## What it includes
 
@@ -14,27 +14,16 @@ Originally built on Laravel 6, PHP 7.2, and Vue 2. The backend was upgraded to L
 - Localized content pages (default locales `GB` and `AR`)
 - Search and facet filtering with a denormalized index table
 - Image upload to a local disk plus a configurable shared "front" disk
-- Vue 2 admin panel built with Laravel Mix 6
+- Translation files endpoints consumed by the SPA repo
 - Feature and unit tests covering auth, role updates, content flows, search, and translations
 
 ## Tech stack
-
-Backend
 
 - PHP 8.2
 - Laravel 12
 - Laravel Passport 12
 - Spatie Permission 6
 - MySQL 5.7+ or MariaDB 10.4+
-
-Frontend
-
-- Vue 2.7
-- Vue Router 3
-- Vuex 3
-- Vuetify 2
-- Laravel Mix 6
-- Node 20 LTS recommended
 
 ## Local setup
 
@@ -62,14 +51,6 @@ Database and Passport:
 php artisan migrate
 php artisan db:seed
 php artisan passport:install
-```
-
-Frontend:
-
-```bash
-nvm use 20
-npm install
-npm run development
 ```
 
 Run the app:
@@ -114,8 +95,5 @@ Good files to start with:
 ## Legacy notes
 
 - The project started as Laravel 6 and was upgraded to Laravel 12.
-- Vue 2 was kept on purpose. No Vue 3 migration in this sample.
 - The legacy Laravel app structure (`Kernel.php`, `Handler.php`, `RouteServiceProvider.php`) was kept on purpose.
 - Some naming and schema choices still reflect the original codebase.
-
-Known limitations and follow-ups are in `KNOWN_LIMITATIONS.md`.
