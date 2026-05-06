@@ -2,8 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Models\Article;
 use App\Models\Country;
 use App\Models\CountryNames;
+use App\Models\Coupon;
 use App\Models\SearchOptions;
 use App\Models\SearchOptionsPages;
 use App\Models\Section;
@@ -102,5 +104,39 @@ class LocalizedModelAccessorsTest extends TestCase
         $this->assertArrayHasKey('name', $hiddenPayload);
         $this->assertArrayHasKey('header_name', $hiddenPayload);
         $this->assertArrayNotHasKey('metatags', $hiddenPayload);
+    }
+
+    public function test_store_page_accessor_returns_empty_array_when_pages_loaded_but_no_match()
+    {
+        $store = new Store(['id' => 1]);
+        $store->setRelation('pages', new EloquentCollection([]));
+
+        $this->assertSame([], $store->page);
+    }
+
+    public function test_coupon_page_accessor_returns_empty_array_when_pages_loaded_but_no_match()
+    {
+        $coupon = new Coupon(['id' => 1]);
+        $coupon->setRelation('pages', new EloquentCollection([]));
+
+        $this->assertSame([], $coupon->page);
+    }
+
+    public function test_article_page_accessor_returns_empty_array_when_pages_loaded_but_no_match()
+    {
+        $article = new Article(['id' => 1]);
+        $article->setRelation('pages', new EloquentCollection([]));
+
+        $this->assertSame([], $article->page);
+    }
+
+    public function test_country_name_accessors_return_null_when_names_loaded_but_no_match()
+    {
+        $country = new Country(['id' => 1, 'iso' => 'EG']);
+        $country->setRelation('names', new EloquentCollection([]));
+
+        $this->assertNull($country->name);
+        $this->assertNull($country->header_name);
+        $this->assertNull($country->metatags);
     }
 }
