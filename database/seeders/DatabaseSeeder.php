@@ -14,7 +14,8 @@ use Illuminate\Database\Seeder;
  *   4. CouponSeeder — coupons are referenced by the option pivot.
  *   5. OptionSeeder — last, pivots stores and coupons together.
  *   6. StorePageSeeder — bootstraps store sections from seeded coupons.
- *   7. MainPageSeeder — bootstraps the public home page sections.
+ *   7. CountryPageSeeder — seeds country landing sections with mixed layouts.
+ *   8. MainPageSeeder — bootstraps the public home page sections.
  */
 class DatabaseSeeder extends Seeder
 {
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
             CouponSeeder::class,
             OptionSeeder::class,
             StorePageSeeder::class,
+            CountryPageSeeder::class,
             MainPageSeeder::class,
         ]);
     }
