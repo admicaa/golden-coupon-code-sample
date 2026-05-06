@@ -51,13 +51,23 @@ class CountryPageSeeder extends Seeder
                 ->limit(6)
                 ->get();
 
+            $latestCoupons = Coupon::query()
+                ->where('valid', true)
+                ->whereHas('pages')
+                ->whereHas('store', function ($query) use ($country) {
+                    $query->where('country_id', $country->id);
+                })
+                ->orderByDesc('id')
+                ->limit(6)
+                ->get();
+
             if ($stores->isEmpty() && $coupons->isEmpty()) {
                 $skipped++;
                 continue;
             }
 
             $otherCountries = Country::query()
-                ->whereKeyNot($country->id)
+                ->where('id', '!=', $country->id)
                 ->whereHas('names')
                 ->orderBy('iso')
                 ->limit(3)
@@ -89,9 +99,26 @@ class CountryPageSeeder extends Seeder
                 ];
             }
 
-            if ($stores->isNotEmpty()) {
+            if ($latestCoupons->count() > 1) {
                 $sections[] = [
                     'template' => 2,
+                    'is_blog' => false,
+                    'pages' => $this->localizedCopy(
+                        'Fresh coupon pages in ' . $country->name,
+                        'Open the most recently seeded coupon pages from this market in one swipe.',
+                        'أحدث صفحات الكوبونات في ' . $country->name,
+                        'افتح أحدث صفحات الكوبونات المضافة في هذا السوق عبر صف سريع.'
+                    ),
+                    'contents' => $latestCoupons->map(fn ($coupon) => [
+                        'type' => 'coupon',
+                        'coupon_id' => $coupon->id,
+                    ])->all(),
+                ];
+            }
+
+            if ($stores->isNotEmpty()) {
+                $sections[] = [
+                    'template' => 0,
                     'is_blog' => false,
                     'pages' => $this->localizedCopy(
                         'Popular stores in ' . $country->name,
@@ -108,13 +135,13 @@ class CountryPageSeeder extends Seeder
 
             if ($otherCountries->isNotEmpty()) {
                 $sections[] = [
-                    'template' => 0,
+                    'template' => 2,
                     'is_blog' => false,
                     'pages' => $this->localizedCopy(
                         'More markets to explore',
-                        'Browse other countries for fresh coupon pages and store roundups.',
+                        'Browse other countries for fresh coupon pages and store roundups in a compact carousel.',
                         'أسواق أخرى تستحق التصفح',
-                        'تصفح دولا أخرى لاكتشاف صفحات كوبونات ومتاجر جديدة.'
+                        'تصفح دولا أخرى لاكتشاف صفحات كوبونات ومتاجر جديدة عبر شريط سريع.'
                     ),
                     'contents' => $otherCountries->map(fn ($otherCountry) => [
                         'type' => 'country',
