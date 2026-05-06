@@ -3,16 +3,13 @@
 namespace App\Traits;
 
 use App\Events\SearchableChange;
-use Illuminate\Database\Eloquent\Relations\Relation;
 
 trait Search
 {
-    public static function boot()
+    public static function bootSearch()
     {
-        self::saved(function ($model) {
+        static::saved(function ($model) {
             event(new SearchableChange($model));
         });
-
-        parent::boot();
     }
 }
