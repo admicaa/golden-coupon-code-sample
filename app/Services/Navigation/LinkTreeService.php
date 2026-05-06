@@ -35,11 +35,15 @@ class LinkTreeService
 
     public function payload(array $link, $parentId)
     {
-        return [
+        $payload = [
             'link' => $link['url'],
-            'name__ar' => $link['pages']['AR']['name'],
-            'name__GB' => $link['pages']['GB']['name'],
             'link_id' => $parentId,
         ];
+
+        foreach ((array) ($link['pages'] ?? []) as $language => $page) {
+            $payload['name__' . strtoupper($language)] = $page['name'] ?? null;
+        }
+
+        return $payload;
     }
 }
