@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Admin;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
@@ -11,7 +11,7 @@ use Tests\TestCase;
 class AdminManagementTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

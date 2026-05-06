@@ -3,14 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Admin;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
 
 class AdminAuthTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     public function test_invalid_admin_login_returns_unauthorized()
     {

@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Country;
 use App\Models\Languages;
 use App\Models\Store;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InteractsWithAdminAuth;
@@ -14,7 +14,7 @@ use Tests\TestCase;
 class StoreApiTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

@@ -3,14 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Link;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
 
 class LinksApiTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     public function test_admin_can_save_a_nested_link_tree()
     {
@@ -48,13 +48,13 @@ class LinksApiTest extends TestCase
         $this->assertDatabaseHas('links', [
             'id' => $parent->id,
             'name__GB' => 'Parent',
-            'name__ar' => 'الرئيسية',
+            'name__AR' => 'الرئيسية',
             'link_id' => null,
         ]);
         $this->assertDatabaseHas('links', [
             'link' => '/parent/child',
             'name__GB' => 'Child',
-            'name__ar' => 'الطفل',
+            'name__AR' => 'الطفل',
             'link_id' => $parent->id,
         ]);
     }

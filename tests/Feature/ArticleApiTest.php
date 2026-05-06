@@ -6,14 +6,14 @@ use App\Models\Admin;
 use App\Models\Article;
 use App\Models\Languages;
 use App\Models\Permission;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Laravel\Passport\Passport;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class ArticleApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

@@ -13,12 +13,12 @@ use Database\Seeders\CouponSeeder;
 use Database\Seeders\MainPageSeeder;
 use Database\Seeders\StorePageSeeder;
 use Database\Seeders\StoreSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\TestCase;
 
 class PageSeedersTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {
@@ -55,7 +55,7 @@ class PageSeedersTest extends TestCase
         $this->assertGreaterThan(0, $homeSections->filter(fn ($section) => $section->contents->whereNotNull('store_id')->isNotEmpty())->count());
         $this->assertGreaterThan(0, $homeSections->filter(fn ($section) => $section->contents->whereNotNull('country_id')->isNotEmpty())->count());
         $this->assertSame(
-            ['GB', 'AR'],
+            ['AR', 'GB'],
             $homeSections[0]->pages->pluck('language')->sort()->values()->all()
         );
         $this->assertSame(Coupon::count() * 2, CouponPages::count());
@@ -96,9 +96,20 @@ class PageSeedersTest extends TestCase
         $this->assertSame(0, $countrySectionsByCountry->filter(function ($sections) {
             return $sections->filter(fn ($section) => $section->contents->whereNotNull('store_id')->isNotEmpty())->count() === 0;
         })->count());
-        $this->assertSame(0, Section::query()->whereNotNull('store_id')->whereNull('page_id')->whereHas('contents', function ($query) {
-            $query->whereNull('coupon_id');
-        })->count());
+        $this->assertSame(0, Section::query()
+            ->whereNotNull('store_id')
+            ->where('template', '!=', 3)
+            ->doesntHave('contents')
+            ->count());
+        $this->assertSame(0, Section::query()
+            ->whereNotNull('store_id')
+            ->whereHas('contents', function ($query) {
+                $query
+                    ->whereNull('coupon_id')
+                    ->whereNull('store_id')
+                    ->whereNull('country_id');
+            })
+            ->count());
         $this->assertSame(0, SectionContents::query()
             ->whereNotNull('coupon_id')
             ->whereHas('coupon', function ($query) {

@@ -9,13 +9,13 @@ use App\Models\Languages;
 use App\Models\Store;
 use App\Models\StorePage;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class SearchableIndexingTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

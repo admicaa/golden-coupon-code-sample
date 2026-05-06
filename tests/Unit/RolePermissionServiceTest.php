@@ -4,14 +4,14 @@ namespace Tests\Unit;
 
 use App\Models\Permission;
 use App\Services\Admin\RolePermissionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RolePermissionServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

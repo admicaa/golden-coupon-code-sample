@@ -7,13 +7,13 @@ use App\Models\Coupon;
 use App\Models\Languages;
 use App\Models\SearchOptions;
 use App\Models\Store;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class FrontSearchApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

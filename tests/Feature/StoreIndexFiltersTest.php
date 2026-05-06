@@ -5,14 +5,14 @@ namespace Tests\Feature;
 use App\Models\Country;
 use App\Models\Languages;
 use App\Models\Store;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
 
 class StoreIndexFiltersTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

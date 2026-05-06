@@ -7,12 +7,12 @@ use App\Models\Languages;
 use App\Models\Store;
 use App\Models\StorePage;
 use App\Services\Content\MetaTagService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\TestCase;
 
 class MetaTagServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

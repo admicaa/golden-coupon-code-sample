@@ -5,14 +5,14 @@ namespace Tests\Feature;
 use App\Models\Country;
 use App\Models\Languages;
 use App\Models\SearchOptions;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
 
 class LocalizedCreateFlowTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {
@@ -90,7 +90,7 @@ class LocalizedCreateFlowTest extends TestCase
 
         $countryId = $countryResponse->json('id');
 
-        $countryResponse->assertOk();
+        $countryResponse->assertSuccessful();
         $this->assertDatabaseHas('country_names', [
             'country_id' => $countryId,
             'language' => 'GB',
@@ -110,7 +110,7 @@ class LocalizedCreateFlowTest extends TestCase
 
         $optionId = $optionResponse->json('id');
 
-        $optionResponse->assertOk();
+        $optionResponse->assertSuccessful();
         $this->assertDatabaseHas('search_options_pages', [
             'search_option_id' => $optionId,
             'language' => 'GB',

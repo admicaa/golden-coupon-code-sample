@@ -3,16 +3,27 @@
 namespace Tests\Feature;
 
 use App\Models\Coupon;
+use App\Models\Languages;
 use App\Models\SearchOptions;
 use App\Models\Store;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SearchOptionsCouponsPivotTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Languages::insert([
+            ['name' => 'English', 'shortcut' => 'GB'],
+            ['name' => 'Arabic', 'shortcut' => 'AR'],
+        ]);
+    }
 
     public function test_pivot_rejects_duplicate_option_coupon_pair()
     {
@@ -58,8 +69,8 @@ class SearchOptionsCouponsPivotTest extends TestCase
         $option = SearchOptions::create();
 
         DB::table('search_options_coupons')->insert([
-            ['search_option_id' => $option->id, 'coupon_id' => $coupon->id],
-            ['search_option_id' => $option->id, 'store_id' => $store->id],
+            ['search_option_id' => $option->id, 'coupon_id' => $coupon->id, 'store_id' => null],
+            ['search_option_id' => $option->id, 'coupon_id' => null, 'store_id' => $store->id],
         ]);
 
         $this->assertSame(

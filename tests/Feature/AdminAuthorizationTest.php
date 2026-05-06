@@ -7,7 +7,7 @@ use App\Models\Coupon;
 use App\Models\Languages;
 use App\Models\Store;
 use App\Models\StoreImages;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
@@ -21,7 +21,7 @@ use Tests\TestCase;
 class AdminAuthorizationTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

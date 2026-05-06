@@ -6,14 +6,14 @@ use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\Languages;
 use App\Models\Store;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
 
 class CouponIndexFiltersTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected function setUp(): void
     {

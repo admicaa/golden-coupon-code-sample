@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Languages;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshMySqlDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\Concerns\InteractsWithAdminAuth;
 use Tests\TestCase;
@@ -11,7 +11,7 @@ use Tests\TestCase;
 class TranslationFilesApiTest extends TestCase
 {
     use InteractsWithAdminAuth;
-    use RefreshDatabase;
+    use RefreshMySqlDatabase;
 
     protected $sourceDirectory;
     protected $sourceFile;
