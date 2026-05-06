@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use SMartins\PassportMultiauth\HasMultiAuthApiTokens;
+use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable
 {
+    use HasApiTokens;
+    use HasRoles;
+    use Notifiable;
 
-    use Notifiable, HasMultiAuthApiTokens, HasRoles;
+    /**
+     * Spatie\Permission scopes roles & permissions to the `admin` guard.
+     */
     protected $guard_name = 'admin';
     /**
      * The attributes that are mass assignable.

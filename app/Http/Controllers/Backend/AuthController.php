@@ -9,15 +9,26 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function login(AdminLoginRequest $request)
+    /**
+     * Authenticate an admin and issue a Passport personal access token.
+     *
+     * The previous implementation called `Auth::guard('admin-api')->attempt()`
+     * to use a session guard purely for credential validation (a workaround
+     * for `smartins/passport-multiauth`). Native Passport supports validating
+     * credentials directly via the user provider, so we drop that detour while
+     * keeping the response shape identical: `{ user, token }`.
+     */
+    public function login(AdminLoginRequest $request): JsonResponse
     {
         $credentials = $request->only(['email', 'password']);
 
-        if (!Auth::guard('admin-web')->attempt($credentials, true)) {
+        $provider = Auth::createUserProvider('admins');
+        $admin = $provider?->retrieveByCredentials($credentials);
+
+        if (!$admin || !$provider->validateCredentials($admin, $credentials)) {
             return new JsonResponse(['message' => trans('auth.failed')], 401);
         }
 
-        $admin = Auth::guard('admin-web')->user();
         $token = $admin->createToken('Admin Token');
 
         return new JsonResponse([

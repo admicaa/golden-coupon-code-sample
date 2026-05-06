@@ -11,21 +11,21 @@ class Kernel extends HttpKernel
      *
      * These middleware are run during every request to your application.
      *
-     * @var array
+     * @var array<int, class-string|string>
      */
     protected $middleware = [
         \App\Http\Middleware\TrustProxies::class,
+        \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\CheckForMaintenanceMode::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \Spatie\Cors\Cors::class
     ];
 
     /**
      * The application's route middleware groups.
      *
-     * @var array
+     * @var array<string, array<int, class-string|string>>
      */
     protected $middlewareGroups = [
         'web' => [
@@ -40,13 +40,16 @@ class Kernel extends HttpKernel
     ];
 
     /**
-     * The application's route middleware.
+     * The application's middleware aliases.
      *
-     * These middleware may be assigned to groups or used individually.
+     * Aliases may be assigned to middleware groups or route definitions. Laravel
+     * 10 renamed `$routeMiddleware` to `$middlewareAliases`; the new name is
+     * preferred. The `multiauth` alias from `smartins/passport-multiauth` was
+     * removed during the Laravel 12 upgrade — `auth:admin` covers it natively.
      *
-     * @var array
+     * @var array<string, class-string|string>
      */
-    protected $routeMiddleware = [
+    protected $middlewareAliases = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -56,8 +59,6 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'multiauth' => \SMartins\PassportMultiauth\Http\Middleware\MultiAuthenticate::class,
-
     ];
 
     /**
@@ -65,7 +66,7 @@ class Kernel extends HttpKernel
      *
      * This forces non-global middleware to always be in the given order.
      *
-     * @var array
+     * @var array<int, class-string|string>
      */
     protected $middlewarePriority = [
         \Illuminate\Session\Middleware\StartSession::class,
