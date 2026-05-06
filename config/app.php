@@ -51,7 +51,9 @@ return [
     | your application so that it is used when running Artisan tasks.
     |
     */
-    'trusted' => explode(',', env('TRUSTED_IP_ADDRESS', null)),
+    // `explode(',', null)` was deprecated in PHP 8.1 and emits a TypeError
+    // path under stricter handlers, so we cast/filter explicitly.
+    'trusted' => array_values(array_filter(explode(',', (string) env('TRUSTED_IP_ADDRESS', '')))),
 
     'url' => env('APP_URL', 'http://localhost'),
 

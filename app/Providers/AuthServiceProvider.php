@@ -46,11 +46,16 @@ class AuthServiceProvider extends ServiceProvider
         SearchOptions::class => SearchOptionsPolicy::class,
     ];
 
-    public function boot()
+    public function boot(): void
     {
+        // `registerPolicies()` is still called automatically by the parent
+        // boot() in Laravel 12, but calling it explicitly is harmless and
+        // matches the pre-existing behaviour.
         $this->registerPolicies();
 
-        Passport::routes();
+        // Passport >= 11 auto-registers its routes via the Passport service
+        // provider, so `Passport::routes()` was removed. Token lifetimes are
+        // unchanged from the legacy configuration.
         Passport::tokensExpireIn(now()->addDays(15));
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));

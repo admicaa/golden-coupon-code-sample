@@ -36,7 +36,9 @@ Route::prefix('front')->group(function () {
     Route::get('/coupon/{slug}', [FrontMainPageController::class, 'coupon']);
 });
 
-Route::middleware(['multiauth:admin'])->group(function () {
+// Native Passport multi-guard auth replaces the legacy `multiauth:admin`
+// middleware previously provided by smartins/passport-multiauth.
+Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/user', function () {
         return request()->user();
     });
