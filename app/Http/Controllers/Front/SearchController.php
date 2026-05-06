@@ -113,7 +113,7 @@ class SearchController extends Controller
 
     protected function buildCountriesFacet($term, array $filters, $storeOnly, $couponOnly)
     {
-        $countries = Country::query()->get(['id', 'name', 'iso']);
+        $countries = Country::query()->frontFormula()->get(['id', 'iso']);
         $output = [];
 
         foreach ($countries as $country) {
@@ -136,7 +136,9 @@ class SearchController extends Controller
 
     protected function buildFiltersFacet($term, array $countries, $storeOnly, $couponOnly)
     {
-        $options = SearchOptions::with('pages')->get();
+        $options = SearchOptions::with(['pages' => function ($query) {
+            return $query->where('language', language());
+        }])->get();
         $output = [];
 
         foreach ($options as $option) {
