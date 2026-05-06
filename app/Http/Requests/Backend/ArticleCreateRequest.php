@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Http\Requests\Concerns\ValidatesLocalizedPayload;
 use App\Models\Article;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ArticleCreateRequest extends FormRequest
 {
+    use ValidatesLocalizedPayload;
+
     public function authorize()
     {
         return $this->user()->can('create', Article::class);
@@ -17,12 +20,13 @@ class ArticleCreateRequest extends FormRequest
     {
         if ($this->has('pages')) {
             return [
-                'pages' => 'required|array',
+                'pages' => 'required|array|min:1',
                 'pages.GB' => 'required|array',
-                'pages.GB.slug' => 'required|string|max:191|unique:article_pages,slug',
-                'pages.GB.name' => 'required|string|max:191',
-                'pages.GB.title' => 'required|string|max:191',
-                'pages.GB.description' => 'nullable|string',
+                'pages.*' => 'required|array',
+                'pages.*.slug' => 'required|string|max:191|distinct|unique:article_pages,slug',
+                'pages.*.name' => 'required|string|max:191',
+                'pages.*.title' => 'required|string|max:191',
+                'pages.*.description' => 'nullable|string',
             ];
         }
 
@@ -33,5 +37,20 @@ class ArticleCreateRequest extends FormRequest
             'description' => 'nullable|string',
             'body' => 'nullable|string',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        if (!$this->has('pages')) {
+            return;
+        }
+
+        $validator->after(function ($validator) {
+            $this->validateAllowedLanguageKeys(
+                $validator,
+                (array) $this->input('pages', []),
+                'pages'
+            );
+        });
     }
 }

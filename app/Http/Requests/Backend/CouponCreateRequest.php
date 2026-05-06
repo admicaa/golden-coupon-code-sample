@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Http\Requests\Concerns\ValidatesLocalizedPayload;
 use App\Models\Coupon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CouponCreateRequest extends FormRequest
 {
+    use ValidatesLocalizedPayload;
+
     public function authorize()
     {
         return $this->user()->can('create', Coupon::class);
@@ -21,11 +24,23 @@ class CouponCreateRequest extends FormRequest
             'valid_until' => 'nullable|date',
             'percentage' => 'required|numeric|min:0|max:100',
             'redirect_url' => 'required|url',
-            'pages' => 'required|array',
+            'pages' => 'required|array|min:1',
             'pages.GB' => 'required|array',
-            'pages.GB.title' => 'required|string|max:191',
-            'pages.GB.slug' => 'required|string|max:191|unique:coupon_pages,slug',
-            'pages.GB.description' => 'nullable|string',
+            'pages.*' => 'required|array',
+            'pages.*.title' => 'required|string|max:191',
+            'pages.*.slug' => 'required|string|max:191|distinct|unique:coupon_pages,slug',
+            'pages.*.description' => 'nullable|string',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateAllowedLanguageKeys(
+                $validator,
+                (array) $this->input('pages', []),
+                'pages'
+            );
+        });
     }
 }

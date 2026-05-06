@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Backend;
 
+use App\Http\Requests\Concerns\ValidatesLocalizedPayload;
 use App\SearchOptions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchOptionRequest extends FormRequest
 {
+    use ValidatesLocalizedPayload;
+
     public function authorize()
     {
         if (!$this->user()) {
@@ -26,9 +29,10 @@ class SearchOptionRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return [
-                'pages' => 'required|array',
+                'pages' => 'required|array|min:1',
                 'pages.GB' => 'required|array',
-                'pages.GB.name' => 'required|string|max:191',
+                'pages.*' => 'required|array',
+                'pages.*.name' => 'required|string|max:191',
             ];
         }
 
@@ -37,5 +41,16 @@ class SearchOptionRequest extends FormRequest
             'pages.*' => 'required|array',
             'pages.*.name' => 'required|string|max:191',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateAllowedLanguageKeys(
+                $validator,
+                (array) $this->input('pages', []),
+                'pages'
+            );
+        });
     }
 }
