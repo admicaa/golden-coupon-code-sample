@@ -3,14 +3,14 @@
     <v-data-table
       :headers="headers"
       :loading="loading"
-      :items="admins"
+      :items="articles"
       :server-items-length="serverItemsLength"
       :options.sync="options"
       class="elevation-1 col-12"
     >
       <template v-slot:top>
         <v-toolbar flat color="white">
-          <v-toolbar-title>Artilces</v-toolbar-title>
+          <v-toolbar-title>Articles</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <div class="flex-grow-1"></div>
           <v-dialog v-model="dialog" max-width="500px">
@@ -39,7 +39,7 @@
                         :auto-grow="true"
                         :clearable="true"
                         v-model="editedItem.body"
-                        label="body"
+                        label="Description"
                       ></v-textarea>
                     </v-col>
                   </v-row>
@@ -55,17 +55,16 @@
           </v-dialog>
         </v-toolbar>
       </template>
-      <template v-slot:item.auther_information="{ item }">{{ item.auther_information.name }}</template>
       <template v-slot:item.action="{ item }">
         <v-icon
           small
-          v-if="$can(['edit-all-articles']) || canEditArticle(item)"
+          v-if="$can(['edit-articles'])"
           class="mr-2"
           @click="editItem(item)"
         >edit</v-icon>
         <v-icon
           small
-          v-if="$can(['delete-all-articles']) || canBeDeleted(item)"
+          v-if="$can(['delete-articles'])"
           @click="deleteItem(item)"
         >delete</v-icon>
       </template>
@@ -77,14 +76,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
 export default {
   data: () => ({
     dialog: false,
     loading: true,
     options: {},
     serverItemsLength: 0,
-    roles: [],
 
     allHeaders: [
       {
@@ -93,22 +90,16 @@ export default {
         sortable: false,
         value: "name"
       },
-      { text: "content", value: "body" },
-      { text: "creator", sortable: false, value: "auther_information" },
+      { text: "description", value: "body" },
 
       {
         text: "Actions",
         value: "action",
         sortable: false,
-        permissions: [
-          "edit-his-articles",
-          "edit-all-articles",
-          "delete-his-articles",
-          "delete-all-articles"
-        ]
+        permissions: ["edit-articles", "delete-articles"]
       }
     ],
-    admins: [],
+    articles: [],
     editedIndex: -1,
     editedItem: {
       name: "",
@@ -120,7 +111,6 @@ export default {
     }
   }),
   computed: {
-    ...mapGetters(["user"]),
     formTitle() {
       return this.editedIndex === -1 ? "New Item" : "Edit Item";
     },
@@ -151,18 +141,10 @@ export default {
     this.getDataFromApi(this.options);
   },
   methods: {
-    canBeDeleted(item) {
-      return (
-        this.$can(["delete-his-articles"]) && this.user.id === item.admin_id
-      );
-    },
-    canEditArticle(item) {
-      return this.$can(["edit-his-articles"]) && this.user.id === item.admin_id;
-    },
     getDataFromApi(options) {
       this.loading = true;
       this.$store.dispatch("getArticles", options).then(response => {
-        this.admins = response.data.data;
+        this.articles = response.data.data;
         this.serverItemsLength = response.data.total;
         this.$nextTick(() => {
           this.loading = false;
@@ -171,13 +153,13 @@ export default {
     },
     initialize() {},
     editItem(item) {
-      this.editedIndex = this.admins.indexOf(item);
+      this.editedIndex = this.articles.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
     deleteItem(item) {
       confirm("Are you sure you want to delete this item?") &&
-        this.$store.dispatch("deleteArticle", item).then(response => {
+        this.$store.dispatch("deleteArticle", item).then(() => {
           this.getDataFromApi(this.options);
         });
     },
@@ -192,12 +174,11 @@ export default {
       if (this.editedIndex > -1) {
         this.$store
           .dispatch("updateArticle", this.editedItem)
-          .then(response => {
+          .then(() => {
             this.getDataFromApi(this.options);
           });
       } else {
-        this.$store.dispatch("addArticle", this.editedItem).then(response => {
-          console.log(response);
+        this.$store.dispatch("addArticle", this.editedItem).then(() => {
           this.getDataFromApi(this.options);
         });
       }
