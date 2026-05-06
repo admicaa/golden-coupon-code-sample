@@ -7,11 +7,18 @@ use App\Http\Requests\Backend\SearchOptionAssignRequest;
 use App\Http\Requests\Backend\SearchOptionRequest;
 use App\Models\Coupon;
 use App\Models\Store;
+use App\Services\Catalog\SearchOptionService;
 use App\SearchOptions;
-use Illuminate\Support\Facades\DB;
 
 class SearchOptionsController extends Controller
 {
+    protected $options;
+
+    public function __construct(SearchOptionService $options)
+    {
+        $this->options = $options;
+    }
+
     public function index()
     {
         $this->authorize('viewAny', SearchOptions::class);
@@ -23,40 +30,14 @@ class SearchOptionsController extends Controller
     {
         $this->authorize('create', SearchOptions::class);
 
-        $data = $request->validated();
-
-        return DB::transaction(function () use ($data) {
-            $option = SearchOptions::create([]);
-
-            foreach (languages() as $language) {
-                $option->pages()->create([
-                    'language' => $language->shortcut,
-                    'name' => $data['pages']['GB']['name'],
-                ]);
-            }
-
-            return $option->adminFormula()->find($option->id);
-        });
+        return $this->options->create($request->validated());
     }
 
     public function update(SearchOptionRequest $request, SearchOptions $option)
     {
         $this->authorize('update', $option);
 
-        $data = $request->validated();
-
-        DB::transaction(function () use ($data, $option) {
-            foreach (languages() as $language) {
-                if (!isset($data['pages'][$language->shortcut])) {
-                    continue;
-                }
-                $option->pages()
-                    ->where('language', $language->shortcut)
-                    ->update(['name' => $data['pages'][$language->shortcut]['name']]);
-            }
-        });
-
-        return $option->adminFormula()->find($option->id);
+        return $this->options->update($option, $request->validated());
     }
 
     public function destroy(SearchOptions $option)
@@ -78,8 +59,6 @@ class SearchOptionsController extends Controller
 
         $this->authorize('update', $element);
 
-        $element->options()->sync($request->input('options', []));
-
-        return $element->options()->get();
+        return $this->options->assign($element, $request->input('options', []));
     }
 }

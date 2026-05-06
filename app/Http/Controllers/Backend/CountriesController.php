@@ -10,11 +10,21 @@ use App\Http\Requests\Backend\MetaTagsRequest;
 use App\Models\Country;
 use App\Models\CountryNames;
 use App\Models\StorePageMetaTag;
+use App\Services\Catalog\CountryService;
+use App\Services\Content\MetaTagService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CountriesController extends Controller
 {
+    protected $countries;
+    protected $metaTags;
+
+    public function __construct(CountryService $countries, MetaTagService $metaTags)
+    {
+        $this->countries = $countries;
+        $this->metaTags = $metaTags;
+    }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', Country::class);
@@ -26,67 +36,24 @@ class CountriesController extends Controller
 
     public function store(CountryCreateRequest $request)
     {
-        $data = $request->validated();
-
-        return DB::transaction(function () use ($data) {
-            $country = Country::create(['iso' => $data['iso']]);
-            $tags = config('seo.default_meta_tags', []);
-
-            foreach (languages() as $language) {
-                $page = $country->names()->create([
-                    'language' => $language->shortcut,
-                    'name' => $data['names']['GB']['name'],
-                    'header_name' => $data['names']['GB']['header_name'],
-                ]);
-
-                foreach ($tags as $tag) {
-                    $page->metatags()->create($tag);
-                }
-            }
-
-            return $country;
-        });
+        return $this->countries->create($request->validated());
     }
 
     public function update(CountryUpdateRequest $request, Country $country)
     {
-        $country->update($request->only(['iso']));
-
-        return $country;
+        return $this->countries->update($country, $request->validated());
     }
 
     public function updatePage(CountryNameUpdateRequest $request, CountryNames $name)
     {
-        $name->update($request->only(['name', 'header_name']));
-
-        return $name->country;
+        return $this->countries->updateName($name, $request->validated());
     }
 
     public function updateMetaTags(MetaTagsRequest $request, CountryNames $storePage)
     {
         $this->authorize('update', $storePage->country);
 
-        DB::transaction(function () use ($request, $storePage) {
-            foreach ($request->input('content') as $tag) {
-                $type = $tag['type'] ?? 1;
-                if (!empty($tag['id'])) {
-                    $metaTag = $storePage->metatags()->where('id', $tag['id'])->firstOrFail();
-                    $metaTag->update([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                } else {
-                    $storePage->metatags()->create([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                }
-            }
-        });
-
-        return $storePage->metatags;
+        return $this->metaTags->sync($storePage, $request->input('content'));
     }
 
     public function destroyMetaTag(StorePageMetaTag $tag)

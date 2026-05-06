@@ -10,11 +10,21 @@ use App\Http\Requests\Backend\MetaTagsRequest;
 use App\Models\Coupon;
 use App\Models\CouponPages;
 use App\Models\StorePageMetaTag;
+use App\Services\Catalog\CouponService;
+use App\Services\Content\MetaTagService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CouponController extends Controller
 {
+    protected $coupons;
+    protected $metaTags;
+
+    public function __construct(CouponService $coupons, MetaTagService $metaTags)
+    {
+        $this->coupons = $coupons;
+        $this->metaTags = $metaTags;
+    }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', Coupon::class);
@@ -34,86 +44,24 @@ class CouponController extends Controller
 
     public function store(CouponCreateRequest $request)
     {
-        $data = $request->validated();
-
-        $coupon = DB::transaction(function () use ($data) {
-            $coupon = Coupon::create([
-                'store_id' => $data['store_id'],
-                'redirect_url' => $data['redirect_url'],
-                'percentage' => $data['percentage'],
-                'coupon_key' => $data['coupon_key'],
-                'valid' => $data['valid'],
-                'valid_until' => $data['valid_until'] ?? null,
-            ]);
-
-            $tags = config('seo.default_meta_tags', []);
-            foreach (languages() as $language) {
-                $page = CouponPages::create([
-                    'coupon_id' => $coupon->id,
-                    'language' => $language->shortcut,
-                    'title' => $data['pages']['GB']['title'],
-                    'slug' => $language->shortcut === 'GB'
-                        ? $data['pages']['GB']['slug']
-                        : $data['pages']['GB']['slug'] . '-' . $language->shortcut,
-                    'description' => $data['pages']['GB']['description'] ?? null,
-                ]);
-
-                foreach ($tags as $tag) {
-                    $page->metatags()->firstOrCreate(
-                        ['name' => $tag['name']],
-                        ['value' => $tag['value']]
-                    );
-                }
-            }
-
-            return $coupon;
-        });
-
-        return $coupon->adminFormula()->find($coupon->id);
+        return $this->coupons->create($request->validated());
     }
 
     public function update(CouponUpdateRequest $request, Coupon $coupon)
     {
-        $coupon->update($request->only([
-            'coupon_key', 'valid', 'valid_until', 'redirect_url', 'percentage',
-        ]));
-
-        return $coupon;
+        return $this->coupons->update($coupon, $request->validated());
     }
 
     public function updatePage(CouponPageUpdateRequest $request, CouponPages $page)
     {
-        $page->update($request->only(['title', 'description', 'slug']));
-
-        return $page->coupon->adminFormula()->find($page->coupon_id);
+        return $this->coupons->updatePage($page, $request->validated());
     }
 
     public function updateMetaTags(MetaTagsRequest $request, CouponPages $page)
     {
         $this->authorize('update', $page->coupon);
 
-        DB::transaction(function () use ($request, $page) {
-            foreach ($request->input('content') as $tag) {
-                $type = $tag['type'] ?? 1;
-                if (!empty($tag['id'])) {
-                    $metaTag = $page->metatags()->where('id', $tag['id'])->firstOrFail();
-                    $metaTag->update([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                } else {
-                    $page->metatags()->create([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                }
-            }
-            $page->touch();
-        });
-
-        return $page->metatags;
+        return $this->metaTags->sync($page, $request->input('content'), true);
     }
 
     public function destroyMetaTag(StorePageMetaTag $tag)

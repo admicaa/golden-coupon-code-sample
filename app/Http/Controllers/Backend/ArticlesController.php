@@ -12,14 +12,21 @@ use App\Models\Article;
 use App\Models\ArticlePages;
 use App\Models\StoreImages;
 use App\Models\StorePageMetaTag;
+use App\Services\Catalog\ArticleService;
+use App\Services\Content\MetaTagService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ArticlesController extends Controller
 {
+    protected $articles;
+    protected $metaTags;
+
+    public function __construct(ArticleService $articles, MetaTagService $metaTags)
+    {
+        $this->articles = $articles;
+        $this->metaTags = $metaTags;
+    }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', Article::class);
@@ -47,79 +54,24 @@ class ArticlesController extends Controller
 
     public function store(ArticleCreateRequest $request)
     {
-        $data = $request->validated();
-        $pageData = $this->pageData($data);
-
-        $article = DB::transaction(function () use ($pageData) {
-            $article = Article::create();
-            $tags = config('seo.default_meta_tags', []);
-
-            foreach (languages() as $language) {
-                $payload = [
-                    'language' => $language->shortcut,
-                    'slug' => $language->shortcut === 'GB'
-                        ? $pageData['slug']
-                        : $pageData['slug'] . '-' . $language->shortcut,
-                    'name' => $pageData['name'],
-                    'title' => $pageData['title'],
-                    'description' => $pageData['description'],
-                ];
-                $page = $article->pages()->create($payload);
-
-                foreach ($tags as $tag) {
-                    $page->metatags()->create($tag);
-                }
-            }
-
-            return $article;
-        });
-
-        return $article->adminFormula()->find($article->id);
+        return $this->articles->create($request->validated());
     }
 
     public function update(ArticleUpdateRequest $request, Article $article)
     {
-        $page = $article->pages()->where('language', language())->first()
-            ?: $article->pages()->where('language', 'GB')->firstOrFail();
-        $pageData = $this->pageData($request->validated(), $page);
-
-        $page->update($pageData);
-
-        return $article->adminFormula()->find($article->id);
+        return $this->articles->update($article, $request->validated(), language());
     }
 
     public function updatePage(ArticlePageUpdateRequest $request, ArticlePages $page)
     {
-        $page->update($request->only(['title', 'slug', 'description', 'name']));
-
-        return $page->article->adminFormula()->find($page->article_id);
+        return $this->articles->updatePage($page, $request->validated());
     }
 
     public function updateMetaTags(MetaTagsRequest $request, ArticlePages $page)
     {
         $this->authorize('update', $page->article);
 
-        DB::transaction(function () use ($request, $page) {
-            foreach ($request->input('content') as $tag) {
-                $type = $tag['type'] ?? 1;
-                if (!empty($tag['id'])) {
-                    $metaTag = $page->metatags()->where('id', $tag['id'])->firstOrFail();
-                    $metaTag->update([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                } else {
-                    $page->metatags()->create([
-                        'name' => $tag['name'],
-                        'value' => $tag['value'],
-                        'type' => $type,
-                    ]);
-                }
-            }
-        });
-
-        return $page->metatags;
+        return $this->metaTags->sync($page, $request->input('content'));
     }
 
     public function destroyMetaTag(StorePageMetaTag $tag)
@@ -137,34 +89,7 @@ class ArticlesController extends Controller
 
     public function changeImage(ArticleImageRequest $request, Article $article)
     {
-        $image = $request->file('images')[0];
-        $path = $image->store('blog/' . $article->id);
-        $publicPath = Storage::url($path);
-
-        return DB::transaction(function () use ($article, $publicPath) {
-            if ($article->image) {
-                $absolute = realpath(storage_path('app/' . ltrim($article->image->storage_path, '/')));
-                $root = realpath(storage_path('app'));
-                if ($absolute && $root && strpos($absolute, $root . DIRECTORY_SEPARATOR) === 0 && File::exists($absolute)) {
-                    File::delete($absolute);
-                }
-                $article->image()->update([
-                    'storage_path' => ltrim(str_replace('/storage/', '', $publicPath), '/'),
-                    'path' => $publicPath,
-                    'image_path' => url($publicPath),
-                ]);
-
-                return [$article->fresh()->image];
-            }
-
-            $created = $article->image()->create([
-                'storage_path' => ltrim(str_replace('/storage/', '', $publicPath), '/'),
-                'path' => $publicPath,
-                'image_path' => url($publicPath),
-            ]);
-
-            return [$created];
-        });
+        return $this->articles->replaceImage($article, $request->file('images')[0]);
     }
 
     public function updateImage(Request $request, StoreImages $image)
@@ -181,22 +106,7 @@ class ArticlesController extends Controller
             'alt' => 'nullable|string|max:191',
         ]);
 
-        $oldPath = $image->path;
-        $image->update([
-            'path' => $data['path'],
-            'image_path' => url($data['path']),
-            'title' => $data['title'] ?? $image->title,
-            'alt' => $data['alt'] ?? $image->alt,
-        ]);
-
-        if ($oldPath !== $image->path) {
-            StorePageMetaTag::query()
-                ->whereIn('article_id', $article->pages()->pluck('id'))
-                ->where('value', url($oldPath))
-                ->update(['value' => url($image->path)]);
-        }
-
-        return [$article->fresh()->image];
+        return $this->articles->updateImage($image, $data);
     }
 
     public function destroy(Article $article)
@@ -207,26 +117,4 @@ class ArticlesController extends Controller
         return $article->id;
     }
 
-    protected function pageData(array $data, ?ArticlePages $page = null)
-    {
-        if (isset($data['pages']['GB'])) {
-            return [
-                'name' => $data['pages']['GB']['name'],
-                'title' => $data['pages']['GB']['title'],
-                'slug' => $data['pages']['GB']['slug'],
-                'description' => $data['pages']['GB']['description'] ?? null,
-            ];
-        }
-
-        $name = $data['name'];
-
-        return [
-            'name' => $name,
-            'title' => $data['title'] ?? ($page ? ($page->title === $page->name ? $name : $page->title) : $name),
-            'slug' => $data['slug'] ?? ($page ? $page->slug : Str::slug($name)),
-            'description' => array_key_exists('description', $data)
-                ? $data['description']
-                : (array_key_exists('body', $data) ? $data['body'] : ($page ? $page->description : null)),
-        ];
-    }
 }
