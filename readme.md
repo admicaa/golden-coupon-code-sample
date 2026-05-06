@@ -14,7 +14,7 @@ Originally built on Laravel 6 and PHP 7.2. The backend was upgraded to Laravel 1
 - Localized content pages (default locales `GB` and `AR`)
 - Search and facet filtering with a denormalized index table
 - Image upload to a local disk plus a configurable shared "front" disk
-- Translation files endpoints consumed by the SPA repo
+- Translation files editor for the admin SPA, plus a public language-tree endpoint at `/api/js/lang/{lang}.js` for the public front site
 - Feature and unit tests covering auth, role updates, content flows, search, and translations
 
 ## Tech stack
