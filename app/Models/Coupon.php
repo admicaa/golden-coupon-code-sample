@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 use App\SearchOptions;
 use App\Traits\Search;
 
@@ -9,6 +10,7 @@ class Coupon extends Model
 {
     //
     use Search;
+    use ResolvesLocalizedRelations;
 
     protected $appends = ['page'];
 
@@ -53,21 +55,28 @@ class Coupon extends Model
     {
         return $query->with(['store' => function ($query) {
             return $query->frontFormula();
+        }, 'pages' => function ($query) {
+            return $query->frontFormula()->where('language', language());
         }]);
     }
 
     public function mainPage()
     {
-        return $this->pages()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('pages');
     }
 
     public function getPageAttribute()
     {
-        $onlyArray = ['title', 'name', 'metatags', 'slug', 'description'];
+        return $this->mainPage()->only($this->pageColumns());
+    }
+
+    protected function pageColumns()
+    {
         if (request()->hide_tour_page_description) {
-            $onlyArray = ['title', 'name', 'slug'];
+            return ['title', 'name', 'slug'];
         }
-        return $this->mainPage()->only($onlyArray);
+
+        return ['title', 'name', 'metatags', 'slug', 'description'];
     }
 
     public function pages()

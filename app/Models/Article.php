@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 
 class Article extends Model
 {
     //
+    use ResolvesLocalizedRelations;
+
     protected $appends = ['page'];
 
     public function pages()
@@ -15,16 +18,21 @@ class Article extends Model
 
     public function mainPage()
     {
-        return $this->pages()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('pages');
     }
 
     public function getPageAttribute()
     {
-        $onlyArray = ['title', 'name', 'slug'];
+        return $this->mainPage()->only($this->pageColumns());
+    }
+
+    protected function pageColumns()
+    {
         if (request()->body) {
-            $onlyArray = ['title', 'name', 'metatags', 'slug', 'description'];
+            return ['title', 'name', 'metatags', 'slug', 'description'];
         }
-        return $this->mainPage()->only($onlyArray);
+
+        return ['title', 'name', 'slug'];
     }
 
     public function sections()
@@ -52,9 +60,10 @@ class Article extends Model
     public function scopeFrontFormula($query)
     {
         return $query->with([
-
-
             'image',
+            'pages' => function ($query) {
+                return $query->frontFormula()->where('language', language());
+            },
         ]);
     }
 

@@ -2,11 +2,14 @@
 
 namespace App;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 use App\Models\Model;
 
 class SearchOptions extends Model
 {
     //
+    use ResolvesLocalizedRelations;
+
     protected $appends = ['page'];
     public function pages()
     {
@@ -20,7 +23,7 @@ class SearchOptions extends Model
 
     public function mainPage()
     {
-        return $this->pages()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('pages');
     }
 
     public function scopeAdminFormula($query)

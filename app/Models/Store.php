@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 use App\SearchOptions;
 use App\Traits\Search;
 
@@ -9,6 +10,7 @@ class Store extends Model
 {
     //
     use Search;
+    use ResolvesLocalizedRelations;
     protected $appends = ['page'];
 
     public function getSearchColumnAttribute()
@@ -62,10 +64,13 @@ class Store extends Model
     public function scopeFrontFormula($query)
     {
         return $query->with([
-
-
             'image',
-            'country'
+            'country' => function ($query) {
+                return $query->frontFormula();
+            },
+            'pages' => function ($query) {
+                return $query->frontFormula()->where('language', language());
+            },
         ]);
     }
 
@@ -83,16 +88,21 @@ class Store extends Model
 
     public function mainPage()
     {
-        return $this->pages()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('pages');
     }
 
     public function getPageAttribute()
     {
-        $onlyArray = ['title', 'name', 'slug'];
+        return $this->mainPage()->only($this->pageColumns());
+    }
+
+    protected function pageColumns()
+    {
         if (request()->body) {
-            $onlyArray = ['title', 'name', 'metatags', 'slug', 'body'];
+            return ['title', 'name', 'metatags', 'slug', 'body'];
         }
-        return $this->mainPage()->only($onlyArray);
+
+        return ['title', 'name', 'slug'];
     }
 
     public function coupons()

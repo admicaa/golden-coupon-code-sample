@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesLocalizedRelations;
 
 class Section extends Model
 {
     //
+    use ResolvesLocalizedRelations;
+
     protected $appends = ['page'];
     protected $with = ['contents'];
     public function contents()
@@ -20,7 +23,7 @@ class Section extends Model
 
     public function getPageAttribute()
     {
-        return $this->pages()->where('language', language())->firstOrFail();
+        return $this->localizedRelation('pages');
     }
 
     public function store()
@@ -44,11 +47,12 @@ class Section extends Model
     public function scopeFrontFormula($query)
     {
         return $query->orderBy('sort', 'ASC')->with([
-
             'contents' => function ($query) {
                 return $query->frontFormula();
             },
-
+            'pages' => function ($query) {
+                return $query->frontFormula();
+            },
         ]);
     }
 }
