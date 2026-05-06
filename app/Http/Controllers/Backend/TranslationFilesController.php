@@ -4,54 +4,57 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\TranslationFiles;
+use App\Services\Translations\TranslationFileService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class TranslationFilesController extends Controller
 {
+    protected $translationFiles;
+
+    public function __construct(TranslationFileService $translationFiles)
+    {
+        $this->translationFiles = $translationFiles;
+    }
+
     public function getFiles($language)
     {
         $language = $this->normaliseLanguage($language);
         $this->authorizeLanguage($language);
 
-        $directory = $this->languageRoot($language);
-        if (!File::isDirectory($directory)) {
-            abort(404);
-        }
-
-        return $this->collectFiles($directory);
+        return $this->translationFiles->listFiles();
     }
 
     public function get(Request $request)
     {
         [$language, $relativePath] = $this->validatePathRequest($request);
-        $absolutePath = $this->resolveSafePath($language, $relativePath);
 
-        return $this->loadTranslations($absolutePath);
+        return $this->translationFiles->load($language, $relativePath);
     }
 
     public function saveFile(Request $request)
     {
         [$language, $relativePath] = $this->validatePathRequest($request);
-        $absolutePath = $this->resolveSafePath($language, $relativePath);
-
-        $existing = $this->loadTranslations($absolutePath);
+        $existing = $this->translationFiles->load($language, $relativePath);
         $rules = $this->buildRulesFromExisting($existing);
 
         $validated = $this->validate($request, array_merge([
             'data' => 'required|array',
         ], $rules));
 
-        $payload = '<?php return ' . var_export($validated['data'], true) . ';' . PHP_EOL;
-        File::put($absolutePath, $payload);
+        $saved = $this->translationFiles->save($language, $relativePath, $validated['data']);
+        Cache::forget('lang.' . $language);
 
-        return $validated['data'];
+        return $saved;
     }
 
     protected function validatePathRequest(Request $request)
     {
-        $allowedLanguages = languages()->pluck('shortcut')->all();
+        $allowedLanguages = language_shortcuts();
+        $request->merge([
+            'language' => strtoupper((string) $request->input('language')),
+        ]);
 
         $data = $this->validate($request, [
             'language' => ['required', Rule::in($allowedLanguages)],
@@ -59,29 +62,9 @@ class TranslationFilesController extends Controller
         ]);
 
         $this->authorizeLanguage($data['language']);
+        $this->translationFiles->assertEditableFile($data['file']);
 
         return [$data['language'], $data['file']];
-    }
-
-    protected function resolveSafePath($language, $relativePath)
-    {
-        $root = $this->languageRoot($language);
-        $candidate = $root . DIRECTORY_SEPARATOR . ltrim($relativePath, '/');
-        $real = realpath($candidate);
-        $rootReal = realpath($root);
-
-        if (!$real || !$rootReal || strpos($real, $rootReal . DIRECTORY_SEPARATOR) !== 0) {
-            abort(404);
-        }
-
-        return $real;
-    }
-
-    protected function loadTranslations($path)
-    {
-        $contents = require $path;
-
-        return is_array($contents) ? $contents : [];
     }
 
     protected function buildRulesFromExisting(array $data, $prefix = 'data')
@@ -98,29 +81,10 @@ class TranslationFilesController extends Controller
         return $rules;
     }
 
-    protected function collectFiles($directory)
-    {
-        $list = [];
-        foreach (File::files($directory) as $file) {
-            if ($file->getExtension() === 'php') {
-                $list[$file->getFilename()] = true;
-            }
-        }
-        foreach (File::directories($directory) as $sub) {
-            $list[basename($sub)] = $this->collectFiles($sub);
-        }
-
-        return $list;
-    }
-
-    protected function languageRoot($language)
-    {
-        return resource_path('lang/' . $language . '/pages');
-    }
-
     protected function normaliseLanguage($language)
     {
-        $allowed = languages()->pluck('shortcut')->all();
+        $language = strtoupper((string) $language);
+        $allowed = language_shortcuts();
 
         return in_array($language, $allowed, true) ? $language : abort(404);
     }
